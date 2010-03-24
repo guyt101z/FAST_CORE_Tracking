@@ -91,7 +91,7 @@ class NotificationTest < ActiveSupport::TestCase
         end
 
         def deliver_notify_reading(user, action, reading)
-          puts "notifying #{user.first_name}"
+#          puts "notifying #{user.first_name}"
           @test.record_notification(user, reading)
         end
       end

@@ -3,13 +3,138 @@ one:
   device_id: 1
   reading_start_id: 6
   reading_stop_id: 13
-  created_at: <%= Time.now.to_s :db %>
+  created_at: <%= 10.hours.ago.to_s :db %>
   duration: 9
-  
+
 two:
   id: 2
   device_id: 1
   reading_start_id: 1
   reading_stop_id: 5
-  created_at: <%= Time.now.to_s :db %>
+  created_at: <%= 9.5.hours.ago.to_s :db %>
   duration: 3
+
+# overlapping = B (unterminated) created during A
+# A should be flagged
+suspect_overlapping_a:
+  id: 3
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= 8.hours.ago.to_s :db %>
+  duration: 15
+
+# this one is not newest so it should be flagged as unterminated
+suspect_overlapping_b:
+  id: 4
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (8.hours.ago + 5.minutes).to_s :db %>
+  duration: null
+
+# overlapped = B ended during A
+# A should be flagged
+suspect_overlapped_a:
+  id: 5
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= 7.hours.ago.to_s :db %>
+  duration: 10
+
+suspect_overlapped_b:
+  id: 6
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (7.hours.ago - 5.minutes).to_s :db %>
+  duration: 10
+
+not_suspect_a:
+  id: 9
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= 5.hours.ago.to_s :db %>
+  duration: 2
+
+not_suspect_b:
+  id: 10
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 3.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_c:
+  id: 11
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 6.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_d:
+  id: 12
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 9.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_e:
+  id: 13
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 12.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_f:
+  id: 14
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 15.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_g:
+  id: 15
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 18.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_h:
+  id: 16
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 21.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_i:
+  id: 17
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 24.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_j:
+  id: 18
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 27.minutes).to_s :db %>
+  duration: 2
+
+not_suspect_k:
+  id: 19
+  device_id: 2
+  reading_start_id: 1
+  reading_stop_id: 1
+  created_at: <%= (5.hours.ago + 30.minutes).to_s :db %>
+  duration: 2

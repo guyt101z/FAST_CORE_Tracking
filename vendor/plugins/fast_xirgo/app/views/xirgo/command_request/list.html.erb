@@ -1,3 +1,5 @@
+<h3>Command Requests (<%= @command_requests.total_entries %> total)</h3>
+
 <% for command_request in @command_requests %>
 	<% if command_request.status == "Processing" || command_request.status == "Initiated" %>
 	<% processing = true %>
@@ -56,6 +58,10 @@
 		<% end %>
 	</table>
 <% end%>
+
+<div class="ublip-pagination">
+  <%= will_paginate @command_requests%>
+</div>
 
 <% if processing %>
 <script>

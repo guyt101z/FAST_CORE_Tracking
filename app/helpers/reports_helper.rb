@@ -39,4 +39,13 @@ module ReportsHelper
     content 
    end    
 
+   def link_to_report(name, action, controller = 'reports')
+     "<li>" +
+     link_to(
+       name,
+       {:controller => controller, :action => action, :id => @device.id, :start_date => @start_date, :end_date => @end_date},
+       :class => (params[:action] =~ /^#{action}/ ? 'current' : '')
+     ) + "</li>"
+   end
+
 end

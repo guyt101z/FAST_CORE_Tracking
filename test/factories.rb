@@ -46,9 +46,11 @@ Factory.define :device do |d|
 end
 
 Factory.define :reading do |r|
-  r.device {|device| device.association(:device, :imei => "1234567890")}
+  r.association :device
   r.event_type "normal"
   r.created_at Time.now
+  r.latitude 1.2
+  r.longitude 2.3
 end
 
 Factory.define :trip_event do |te|
@@ -76,4 +78,8 @@ Factory.define :device_profile do |dp|
   dp.name {Factory.next(:profile_name)}
   dp.gpio1_labels "gpio1\tlow\thigh\tlow_notice\thigh_notice"
   dp.gpio2_labels "gpio2\tlow\thigh\tlow_notice\thigh_notice"
+end
+
+Factory.define :geofence do |gf|
+  gf.name "Garth"
 end

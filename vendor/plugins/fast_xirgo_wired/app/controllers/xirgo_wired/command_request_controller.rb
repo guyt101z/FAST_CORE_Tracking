@@ -57,7 +57,7 @@ class XirgoWired::CommandRequestController < XirgoWired::CommonController
     @device = XirgoWired::Device.find(params[:id]) if params[:id]
     @device ||= XirgoWired::Device.new
     conditions = "device_id = #{@device.id}" if @device.id
-    @command_requests = XirgoWired::CommandRequest.find(:all,:conditions => conditions,:order => "start_date_time desc", :limit => 25)
+    @command_requests = XirgoWired::CommandRequest.paginate(:all,:conditions => conditions,:order => "start_date_time desc", :page => params[:page])
   end
   
   # If the command fails allow the user to retry

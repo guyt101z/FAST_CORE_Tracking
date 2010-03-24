@@ -12,7 +12,7 @@ module AccountHelper
       options << options_for_select([['All', '']], selected_id)
       options << options_for_select([['Unprovisioned', '0']], selected_id) if unprovisioned
       options << '<option disabled="disabled">--------------</option>>'
-      options << options_from_collection_for_select(Account.all, :id, :company, selected_id.to_i)
+      options << options_from_collection_for_select(Account.by_company, :id, :company, selected_id.to_i)
     end
   end
 end

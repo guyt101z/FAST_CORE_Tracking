@@ -158,6 +158,19 @@ class DatabaseProcTest < ActiveSupport::TestCase
     assert_equal false, readings[0].gpio1
     assert_equal true, readings[0].gpio2
   end
+
+  def test_reading_with_io_missing_device
+    Reading.delete_all
+    Device.delete_all
+    now = Time.zone.now
+    @device = Factory(:device, :imei => '314159')
+    #insert good reading
+    ActiveRecord::Base.connection.execute("CALL insert_reading_with_io(1,2,3,4,5,#{@device.imei},'#{now.strftime("%Y-%m-%d %H:%M:%S")}', '',1,0,1 )")
+    #insert reading for nonexistant device
+    ActiveRecord::Base.connection.execute("CALL insert_reading_with_io(1,2,3,4,5,271828,'#{now.strftime("%Y-%m-%d %H:%M:%S")}', '',1,0,1 )")
+    @device.reload
+    assert_equal 1, @device.readings.size, "there should be only one reading since second reading was for non-existant device"
+  end
   
   def test_reading_insert_with_io_retval
     Reading.delete_all
@@ -178,66 +191,7 @@ class DatabaseProcTest < ActiveSupport::TestCase
     assert_equal true, readings[0].gpio2
   end
   
-  def test_process_stops
-        Reading.delete_all
-        assert_equal 20, stop_events(:one).duration
-        assert_nil stop_events(:two).duration
-        assert_nil stop_events(:three).duration
-        assert_nil stop_events(:four).duration
-          
-        Reading.new(:latitude => "4.5", :longitude => "5.6", :device_id => devices(:device1).id, :created_at => "2008-07-01 15:20:00", :speed => 10).save
-        Reading.new(:latitude => "8.5", :longitude => "5.614", :device_id => devices(:device1).id, :created_at => "2008-07-01 16:25:00", :speed => 10).save
-        ActiveRecord::Base.connection.execute("call process_stop_events()")
-        
-        stop_events(:two).reload
-        stop_events(:three).reload
-        stop_events(:four).reload
-        
-        assert_equal 20, stop_events(:one).duration
-        assert_equal 23, stop_events(:two).duration
-        assert_equal 28, stop_events(:three).duration
-        assert_nil stop_events(:four).duration
-  end
-  
-  def test_process_idles
-        Reading.delete_all
-        assert_equal 20, idle_events(:one).duration
-        assert_nil idle_events(:two).duration
-        assert_nil idle_events(:three).duration
-        assert_nil idle_events(:four).duration
-          
-        Reading.new(:latitude => "4.5", :longitude => "5.6", :device_id => devices(:device1).id, :created_at => "2008-07-01 15:20:00", :speed => 10).save
-        Reading.new(:latitude => "8.5", :longitude => "5.614", :device_id => devices(:device1).id, :created_at => "2008-07-01 16:25:00", :speed => 10).save
-        ActiveRecord::Base.connection.execute("call process_idle_events()")
-        
-        idle_events(:two).reload
-        idle_events(:three).reload
-        idle_events(:four).reload
-        
-        assert_equal 20, idle_events(:one).duration
-        assert_equal 23, idle_events(:two).duration
-        assert_equal 28, idle_events(:three).duration
-        assert_nil idle_events(:four).duration
-  end
-  
-  context "An idle event followed by an engine off" do
-    setup do
-      Account.delete_all
-      Reading.delete_all
-      device = Factory.create(:device)
-      @idle1 = Factory.create(:idle_event, :created_at => "2008-07-01 15:20:00", :device => device)
-      Factory.create(:reading, :device => device, :created_at => "2008-07-01 15:25:00", :ignition => 0)
-      Factory.create(:reading, :device => device, :created_at => "2008-07-01 15:30:00", :ignition => 1, :speed => 10)
-      ActiveRecord::Base.connection.execute("call process_idle_events()")
-    end
-    
-    should "end the idle event at the engine off" do
-      @idle1.reload
-      assert_equal 8, @idle1.duration
-    end
-  end
-  
-    def test_process_runtimes
+  def test_process_runtimes
     Reading.delete_all
     assert_equal 20, runtime_events(:one).duration
     assert_nil runtime_events(:two).duration

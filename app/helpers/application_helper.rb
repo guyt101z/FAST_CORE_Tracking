@@ -122,8 +122,8 @@ module ApplicationHelper
     label = results[1]
     case results[0]
       when Device::REPORT_TYPE_ALL
-        title = "View all readings"
-        uri = "/reports/all/#{device.id}"
+        title = "View trip report"
+        uri = "/reports/trip/#{device.id}"
       when Device::REPORT_TYPE_STOP
         title = "View stop report"
         uri = "/reports/stop/#{device.id}"

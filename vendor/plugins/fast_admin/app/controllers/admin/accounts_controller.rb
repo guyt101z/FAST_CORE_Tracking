@@ -10,7 +10,14 @@ class Admin::AccountsController < ApplicationController
   end
   
   def index
-    @accounts = Account.active.by_subdomain.paginate(:page => params[:page])
+      @keyword_search = params[:keyword_search] || "" 
+      @accounts = Account.active.by_subdomain.paginate(:per_page => ResultCount, :page => params[:page])
+  end
+  
+  def search
+    @keyword_search = params[:keyword_search] || ""
+    @accounts = Account.active.by_subdomain.company_or_subdomain_like(params[:keyword_search]).paginate(:per_page => ResultCount, :page => params[:page])
+    render :action => :index
   end
 
   def new

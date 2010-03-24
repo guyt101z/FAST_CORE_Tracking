@@ -7,21 +7,11 @@ class DevicesController; def rescue_action(e) raise e end; end
 class DevicesControllerTest < ActionController::TestCase
 
   fixtures :users,:devices,:accounts,:groups,:device_profiles
-  
-  module RequestExtensions
-    def server_name
-      "helo"
-    end
-    def path_info
-      "adsf"
-    end
-  end
 
   def setup
     @controller = DevicesController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
-    @request.extend(RequestExtensions)
   end
   
   def test_index

@@ -9,12 +9,6 @@ class ContactControllerTest < ActionController::TestCase
   fixtures :users
   
   module RequestExtensions
-    def server_name
-      "helo"
-    end
-    def path_info
-      "adsf"
-    end
     def subdomains
       ["myfleet"]
     end

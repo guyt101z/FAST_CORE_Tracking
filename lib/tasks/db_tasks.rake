@@ -3,10 +3,7 @@ namespace :ublip do
   desc 'Setup databse procs in cron'
   task :setup_db_scripts => :environment do 
     db_config = ActiveRecord::Base.configurations[RAILS_ENV]
-    process_script_file("stopreport.sh", db_config)
-    process_script_file("idlereport.sh", db_config)
     process_script_file("runtimereport.sh", db_config)
-    process_script_file("stop_detection.sh", db_config)
   end
   
   desc 'Deploy database procedures and triggers'

@@ -93,4 +93,7 @@ ACCOUNT_EMAIL = "accounts@#{DOMAIN}"
 
 SERVER_UTC_OFFSET = Time.now.utc_offset
 
+# which map engine to use to render maps - options are google or openlayers
+MAP_ENGINE = "google"
+
 ResultCount =25# Number of results per page

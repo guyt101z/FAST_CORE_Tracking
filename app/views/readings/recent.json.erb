@@ -1,0 +1,30 @@
+<%=
+    formatted_devices = @devices.collect do |device|
+        formatted_device = 
+        {   
+            :id => device.id,
+            :name => device.name,
+            :status => latest_status_html(device),
+            :lat => nil,
+            :lng => nil,
+            :address => "N/A",
+            :dt => "",
+            :note => "",
+            :icon_id => device.icon_id
+        }
+
+        if device.latest_gps_reading
+            formatted_device.merge(
+                {
+                    :lat => device.latest_gps_reading.latitude,
+                    :lng => device.latest_gps_reading.longitude,
+                    :address => device.latest_gps_reading.short_address,
+                    :dt => time_ago_in_words(device.latest_gps_reading.created_at) + ' ago',
+                    :note => device.latest_gps_reading.note || ""
+                }
+            )
+        end
+    end
+
+    formatted_devices.to_json()
+%>

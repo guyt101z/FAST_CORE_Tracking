@@ -12,6 +12,7 @@ class ApplicationController < ActionController::Base
   
   helper_method :current_account
   helper :layout, :account, :device_profile
+  helper :page_entries
 
   def current_account
     @current_account ||= Account.find(session[:account_id])

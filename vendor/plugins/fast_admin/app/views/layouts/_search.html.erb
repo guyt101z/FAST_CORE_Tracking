@@ -1,0 +1,8 @@
+<div class="search">
+<% form_tag :method=>:get, :action => :search do -%>		
+	<%= text_field_tag :keyword_search, @keyword_search %>		
+	<%= submit_tag 'Search' %>
+	<% if request.path_parameters['action'] == 'search' %><a href="/<%= request.path_parameters['controller'] %>">cancel</a><% end %>
+<% end -%>
+</div>
+<div class="clear"></div>

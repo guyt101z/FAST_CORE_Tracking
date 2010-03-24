@@ -1,0 +1,10 @@
+<%# google JS is still required at this point, even if using openlayers for GDownloadUrl et al %>
+<%= render :partial => 'layouts/includes/map_key' %>
+
+<%# also include openlayers but only if using %>
+<% if MAP_ENGINE == 'openlayers' %>
+    <%= javascript_include_tag "openlayers/OpenLayers", "openlayers/OpenStreetMap" %>
+<% end %>
+
+<%# finally also include Numerex map classes %>
+<%= javascript_include_tag "classes/LatLon", "classes/Bounds", "classes/Map" %>

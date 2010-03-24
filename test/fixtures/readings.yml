@@ -1987,3 +1987,88 @@ readings_9926:
  ignition: 1
  gpio1: 1
  gpio2: 1
+ 
+readings_10000:
+ updated_at: <%= Time.now.to_s :db %>
+ latitude: 32.8491
+ altitude: 182
+ device_id: 9
+ id: 10000
+ notified:
+ note:
+ speed: 0
+ longitude: -97.1706
+ street: Yates Dr
+ place_name: Hurst
+ admin_name1: TX
+ geofence_event_type: exit
+ event_type: normal
+ direction: 0
+ created_at: <%= Time.now.to_s :db %>
+ ignition: 1
+ gpio1: 0
+ gpio2: 0
+
+
+readings_10001:
+ updated_at: <%= Time.now.to_s :db %>
+ latitude: 32.8491
+ altitude: 182
+ device_id: 9
+ id: 10001
+ notified:
+ note:
+ speed: 0
+ longitude: -97.1706
+ street: Yates Dr
+ place_name: Hurst
+ admin_name1: TX
+ geofence_event_type: exit
+ event_type: GPS Lock
+ direction: 0
+ created_at: <%= Time.now.to_s :db %>
+ ignition: 1
+ gpio1: 0
+ gpio2: 0
+
+readings_10002:
+ updated_at: <%= Time.now.to_s :db %>
+ latitude: 32.8491
+ altitude: 182
+ device_id: 9
+ id: 10002
+ notified:
+ note:
+ speed: 23
+ longitude: -97.1706
+ street: Yates Dr
+ place_name: Hurst
+ admin_name1: TX
+ geofence_event_type: exit
+ event_type: Direction Change
+ direction: 0
+ created_at: <%= Time.now.to_s :db %>
+ ignition: 
+ gpio1: 0
+ gpio2: 0
+
+readings_10003:
+ updated_at: <%= Time.now.to_s :db %>
+ latitude: 32.8491
+ altitude: 182
+ device_id: 9
+ id: 10003
+ notified:
+ note:
+ speed: 0
+ longitude: -97.1706
+ street: Yates Dr
+ place_name: Hurst
+ admin_name1: TX
+ geofence_event_type: exit
+ event_type: Heartbeat
+ direction: 0
+ created_at: <%= Time.now.to_s :db %>
+ ignition: 
+ gpio1: 0
+ gpio2: 0

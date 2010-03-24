@@ -30,10 +30,10 @@ BEGIN
 	DECLARE deviceID INT(11);
 	DECLARE latestStopID INT(11);
     DECLARE duplicateStopID INT(11);
-	
+
 	SELECT id INTO deviceID FROM devices WHERE imei=_modem;
     SELECT id INTO duplicateStopID FROM stop_events WHERE reading_id=_reading_id LIMIT 1;
-	
+
 	IF deviceID IS NOT NULL AND duplicateStopID IS NULL THEN
 		SELECT id INTO latestStopID FROM stop_events WHERE device_id=deviceID AND created_at <= _created ORDER BY created_at desc limit 1;
 		IF (SELECT id FROM stop_events WHERE id=latestStopID AND duration IS NULL and distance(_latitude, _longitude, latitude, longitude) < 0.1) IS NULL THEN
@@ -151,9 +151,11 @@ CREATE PROCEDURE insert_reading_with_io(
 	_gpio2 TINYINT(1)
 )
 BEGIN
-	SELECT id INTO @deviceID FROM devices WHERE imei=_modem;
+	DECLARE deviceID INT(11);
+
+	SELECT id INTO deviceID FROM devices WHERE imei=_modem;
 	INSERT INTO readings (device_id, latitude, longitude, altitude, speed, direction, event_type, created_at, ignition, gpio1, gpio2)
-		VALUES (@deviceID, _latitude, _longitude, _altitude, _speed, _heading, _event_type, _created, _ignition, _gpio1, _gpio2);
+		VALUES (deviceID, _latitude, _longitude, _altitude, _speed, _heading, _event_type, _created, _ignition, _gpio1, _gpio2);
 END;;
 
 DROP PROCEDURE IF EXISTS insert_reading_with_io_returnval;;
@@ -179,67 +181,7 @@ BEGIN
 END;;
 
 DROP PROCEDURE IF EXISTS process_stop_events;;
-CREATE PROCEDURE process_stop_events()
-BEGIN
-	DECLARE num_events_to_check INT;
-	CREATE TEMPORARY TABLE open_stop_events(stop_event_id INT(11), checked BOOLEAN);
-	INSERT INTO open_stop_events SELECT id, FALSE FROM stop_events where duration IS NULL;
-	SELECT COUNT(*) INTO num_events_to_check FROM open_stop_events WHERE checked=FALSE;
-	WHILE num_events_to_check>0 DO BEGIN
-		DECLARE eventID INT;
-		DECLARE first_move_after_stop_id INT;
-		DECLARE stopDuration INT;
-		DECLARE deviceID INT;
-		DECLARE stopTime DATETIME;
-		
-		SELECT stop_event_id INTO eventID FROM open_stop_events WHERE checked=FALSE limit 1;
-		SELECT device_id, created_at into deviceID, stopTime FROM stop_events where id=eventID;
-		UPDATE open_stop_events SET checked=TRUE WHERE stop_event_id=eventId;
-		
-		SELECT id INTO first_move_after_stop_id FROM readings  
-		  WHERE device_id=deviceID AND speed>1 AND created_at>stopTime ORDER BY created_at ASC LIMIT 1;
-		  
-		IF first_move_after_stop_id IS NOT NULL THEN
-			SELECT TIMESTAMPDIFF(MINUTE, stopTime, created_at) INTO stopDuration FROM readings where id=first_move_after_stop_id;
-			UPDATE stop_events SET duration = stopDuration+3 where id=eventID;
-		END IF;
-		
-		SELECT COUNT(*) INTO num_events_to_check FROM open_stop_events WHERE checked=FALSE;
-	END;
-	END WHILE;
-END;;
-
 DROP PROCEDURE IF EXISTS process_idle_events;;
-CREATE PROCEDURE process_idle_events()
-BEGIN
-	DECLARE num_events_to_check INT;
-	DROP TEMPORARY TABLE IF EXISTS open_idle_events;
-	CREATE TEMPORARY TABLE open_idle_events(idle_event_id INT(11), checked BOOLEAN);
-	INSERT INTO open_idle_events SELECT id, FALSE FROM idle_events where duration IS NULL;
-	SELECT COUNT(*) INTO num_events_to_check FROM open_idle_events WHERE checked=FALSE;
-	WHILE num_events_to_check>0 DO BEGIN
-		DECLARE eventID INT;
-		DECLARE first_move_or_off_after_idle_id INT;
-		DECLARE idleDuration INT;
-		DECLARE deviceID INT;
-		DECLARE idleTime DATETIME;
-		
-		SELECT idle_event_id INTO eventID FROM open_idle_events WHERE checked=FALSE limit 1;
-		SELECT device_id, created_at into deviceID, idleTime FROM idle_events where id=eventID;
-		UPDATE open_idle_events SET checked=TRUE WHERE idle_event_id=eventId;
-		
-		SELECT id INTO first_move_or_off_after_idle_id FROM readings  
-		  WHERE device_id=deviceID AND (speed>1 OR ignition=0) AND created_at>idleTime ORDER BY created_at ASC LIMIT 1;
-		  
-		IF first_move_or_off_after_idle_id IS NOT NULL THEN	 
-			SELECT TIMESTAMPDIFF(MINUTE, idleTime, created_at) INTO idleDuration FROM readings where id=first_move_or_off_after_idle_id;
-			UPDATE idle_events SET duration = idleDuration+3 where id=eventID;
-		END IF;
-		
-		SELECT COUNT(*) INTO num_events_to_check FROM open_idle_events WHERE checked=FALSE;
-	END;
-	END WHILE;
-END;;
 
 DROP PROCEDURE IF EXISTS process_runtime_events;;
 CREATE PROCEDURE process_runtime_events()
@@ -273,127 +215,51 @@ BEGIN
 END;;
 
 DROP PROCEDURE IF EXISTS create_stop_events;;
-CREATE PROCEDURE create_stop_events()
-BEGIN
-
-        DECLARE last_move_time, first_stop_time, _created DATETIME;
-        DECLARE lat,lng FLOAT;
-        DECLARE _imei varchar(22);
-        DECLARE _reading_id, _device_id, i INT(11);
-
-        DROP TEMPORARY TABLE IF EXISTS possible_new_stops;
-        CREATE TEMPORARY TABLE possible_new_stops(latitude float, longitude float, imei VARCHAR(22), created DATETIME, reading_id INT(11), device_id INT(11), processed BOOLEAN);
-            INSERT INTO possible_new_stops SELECT r.latitude, r.longitude, d.imei, r.created_at, r.id, r.device_id, FALSE FROM devices d, readings r
-            WHERE d.gateway_name='xirgo' AND r.id=d.recent_reading_id AND r.speed=0 AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL;
-        SELECT COUNT(*) INTO i FROM possible_new_stops WHERE processed=FALSE;
-        WHILE i > 0 DO BEGIN
-            SELECT latitude, longitude, imei, created, reading_id, device_id INTO lat, lng, _imei, _created, _reading_id, _device_id FROM possible_new_stops WHERE processed=FALSE LIMIT 1;
-            SELECT MAX(created_at) INTO last_move_time FROM readings where device_id=_device_id AND speed>0;
-            IF last_move_time IS NOT NULL THEN
-                SELECT MIN(created_at) INTO first_stop_time FROM readings where device_id=_device_id AND speed=0 AND created_at>last_move_time;
-            ELSE
-                #device has never moved
-                SELECT MIN(created_at) INTO first_stop_time FROM readings where device_id=_device_id AND speed=0 AND created_at<_created;
-            END IF;
-            IF TIMESTAMPDIFF(MINUTE, first_stop_time, _created) >= 3 OR TIMESTAMPDIFF(MINUTE, _created, NOW()) >= 3 THEN
-                CALL insert_stop_event(lat, lng, _imei, _created, _reading_id);
-            END IF;
-            UPDATE possible_new_stops SET processed=TRUE where reading_id=_reading_id;
-            SELECT COUNT(*) INTO i FROM possible_new_stops WHERE processed=FALSE;
-        END;
-        END WHILE;
-END;;
-
 DROP PROCEDURE IF EXISTS migrate_stop_data;;
-CREATE PROCEDURE migrate_stop_data()
-BEGIN
-	DECLARE unprocessed_count INT;
-	DROP TEMPORARY TABLE IF EXISTS stops;
-	CREATE TEMPORARY TABLE stops(latitude FLOAT, longitude FLOAT, modem VARCHAR(22), created DATETIME, reading_id INT(11), processed BOOLEAN );
-	INSERT INTO stops SELECT r.latitude, r.longitude, d.imei, r.created_at, r.id, false FROM readings r, devices d WHERE d.id=r.device_id AND r.speed=0 AND r.event_type like '%stop%';
-	CREATE INDEX idx_created ON stops (created); 
-    SELECT COUNT(*) INTO unprocessed_count FROM stops where processed=FALSE;
-	WHILE unprocessed_count > 0 DO BEGIN
-		DECLARE lat FLOAT;
-		DECLARE lng FLOAT;
-		DECLARE imei VARCHAR(22);
-		DECLARE created_at DATETIME;
-		DECLARE readingID INT(11);
-		
-		SELECT latitude,longitude,modem,created,reading_id INTO lat,lng,imei,created_at,readingID FROM stops WHERE processed=FALSE order by created asc limit 1;
-		CALL insert_stop_event(lat, lng, imei, created_at, readingID);
-		UPDATE stops SET processed=TRUE where reading_id=readingID;
-		SELECT COUNT(*) INTO unprocessed_count FROM stops where processed=FALSE;
-	END;
-	END WHILE;
-END;;
 
 DROP TRIGGER IF EXISTS trig_readings_after_insert;;
 CREATE TRIGGER trig_readings_after_insert AFTER INSERT ON readings FOR EACH ROW BEGIN
-    DECLARE last_reading_time DATETIME;
-    CALL check_for_trip_change(NEW.device_id, NEW.id, NEW.created_at, NEW.ignition);
-    SELECT r.created_at INTO last_reading_time FROM devices d,readings r WHERE d.id=NEW.device_id AND r.id=d.recent_reading_id;
-    IF NEW.created_at >= last_reading_time OR last_reading_time IS NULL THEN
-        UPDATE devices SET recent_reading_id=NEW.id WHERE id=NEW.device_id;
-    END IF;
+	DECLARE last_reading_time DATETIME;
+	IF NEW.created_at IS NOT NULL THEN
+	IF NEW.event_type IN ('engine on','engine off','GPS Lock') THEN
+		INSERT INTO spanning_event_hits (id,device_id,event_type,ignition,speed,created_at) VALUES (NEW.id,NEW.device_id,NEW.event_type,NEW.ignition,NEW.speed,NEW.created_at);
+	ELSE
+		SET @time_delay = 1; -- assure that no match is neither "delayed", "tardy" or "duplicate"
+		SELECT TIME_TO_SEC(TIMEDIFF(NEW.created_at,MAX(r.created_at))) INTO @time_delay FROM readings r WHERE r.device_id = NEW.device_id AND r.created_at >= NEW.created_at AND r.id < NEW.id;
+		IF @time_delay < -5 * 60 THEN
+			INSERT INTO spanning_event_hits (id,device_id,event_type,ignition,speed,created_at) VALUES (NEW.id,NEW.device_id,'delayed',NEW.ignition,NEW.speed,NEW.created_at);
+		ELSEIF @time_delay < 0 THEN
+			INSERT INTO spanning_event_hits (id,device_id,event_type,ignition,speed,created_at) VALUES (NEW.id,NEW.device_id,'tardy',NEW.ignition,NEW.speed,NEW.created_at);
+		ELSEIF @time_delay = 0 THEN
+			INSERT INTO spanning_event_hits (id,device_id,event_type,ignition,speed,created_at) VALUES (NEW.id,NEW.device_id,'duplicate',NEW.ignition,NEW.speed,NEW.created_at);
+		ELSE
+			SELECT NULL,NULL,NULL,NULL INTO @last_event_type,@last_ignition,@last_speed,@last_created_at;
+			SELECT r.event_type,r.ignition,r.speed,r.created_at
+				INTO @last_event_type,@last_ignition,@last_speed,@last_created_at
+				FROM readings r
+				WHERE r.device_id = NEW.device_id AND r.id < NEW.id AND r.created_at BETWEEN ADDDATE(NEW.created_at,INTERVAL -5 MINUTE) AND NEW.created_at
+				ORDER BY created_at DESC,id DESC
+				LIMIT 1;
+			IF @last_created_at IS NULL THEN
+				INSERT INTO spanning_event_hits (id,device_id,event_type,ignition,speed,created_at) VALUES (NEW.id,NEW.device_id,'alone',NEW.ignition,NEW.speed,NEW.created_at);
+			ELSEIF @last_event_type = 'GPS Lock' OR
+				@last_ignition IS NULL OR NEW.ignition IS NULL OR
+				(@last_speed > 0 AND NEW.speed = 0) OR (@last_speed = 0 AND NEW.speed > 0) OR
+				(NEW.ignition IS NOT NULL AND @last_ignition IS NOT NULL AND NEW.ignition != @last_ignition) THEN
+				INSERT INTO spanning_event_hits (id,device_id,event_type,ignition,speed,created_at) VALUES (NEW.id,NEW.device_id,'other',NEW.ignition,NEW.speed,NEW.created_at);
+			END IF;
+		END IF;
+	END IF;
+
+	SELECT r.created_at INTO last_reading_time FROM devices d,readings r WHERE d.id=NEW.device_id AND r.id=d.recent_reading_id;
+	IF NEW.created_at >= last_reading_time OR last_reading_time IS NULL THEN
+		UPDATE devices SET recent_reading_id=NEW.id WHERE id=NEW.device_id;
+	END IF;
+END IF;
+
 END;;
 
 DROP PROCEDURE IF EXISTS insert_trip_event;;
-CREATE PROCEDURE insert_trip_event( _reading_start_id INT(11) )
-BEGIN
-    DECLARE identical_trip_count INT(11);
-    SELECT count(*) INTO identical_trip_count FROM trip_events te, readings r
-        where r.id=_reading_start_id AND te.created_at=r.created_at AND te.device_id=r.device_id;
-    IF identical_trip_count=0 THEN
-        INSERT INTO trip_events (device_id, reading_start_id, created_at) SELECT device_id, id, created_at FROM readings where id=_reading_start_id;
-    END IF;
-END;;
-
-DROP PROCEDURE IF EXISTS check_for_trip_change;;
-CREATE PROCEDURE check_for_trip_change(
-    _device_id INT(11),
-    _reading_id INT(11),
-    _timestamp DATETIME,
-    _ignition BOOLEAN
-)
-BEGIN
-    DECLARE previous_ignition boolean;
-    DECLARE open_trip_event boolean;
-    DECLARE subsequent_trip_time DATETIME;
-    DECLARE subsequent_trip_id INT(11);
-    SELECT (duration IS NULL) INTO open_trip_event FROM trip_events where device_id=_device_id order by created_at desc limit 1;
-    SELECT ignition INTO previous_ignition FROM readings WHERE device_id=_device_id AND created_at < _timestamp AND ignition IS NOT NULL ORDER BY created_at DESC LIMIT 1;
-    IF _ignition=TRUE AND (previous_ignition=FALSE OR previous_ignition IS NULL OR open_trip_event=FALSE) THEN
-        SELECT count(*) INTO @newer_trips from trip_events where created_at > _timestamp AND device_id=_device_id;
-        IF @newer_trips > 0 THEN
-            SELECT created_at,id INTO subsequent_trip_time, subsequent_trip_id FROM trip_events 
-                WHERE device_id=_device_id AND created_at > _timestamp ORDER BY created_at ASC LIMIT 1;
-            SELECT COUNT(*) INTO @intermediate_off_count FROM readings 
-                WHERE device_id=_device_id AND ignition=FALSE AND created_at BETWEEN _timestamp AND subsequent_trip_time;
-            IF @intermediate_off_count=0 THEN
-                UPDATE trip_events SET created_at=_timestamp, reading_start_id=_reading_id WHERE id=subsequent_trip_id;
-            ELSE
-                CALL insert_trip_event(_reading_id);
-                #Need to handle this case better
-            END IF;
-        ELSE
-            IF previous_ignition=FALSE OR previous_ignition IS NULL THEN
-                CALL insert_trip_event(_reading_id);
-            ELSE
-                SELECT id INTO @reading_id FROM readings WHERE device_id=_device_id AND ignition=TRUE
-                    AND created_at > (SELECT MAX(created_at) FROM readings WHERE device_id=_device_id AND ignition=FALSE and created_at<_timestamp)
-                    ORDER BY created_at ASC LIMIT 1;
-                CALL insert_trip_event(@reading_id);
-            END IF;
-        END IF;
-    END IF;
-    IF _ignition=FALSE AND previous_ignition=TRUE THEN
-        SELECT duration,id INTO @duration,@trip_id FROM trip_events WHERE device_id=_device_id AND created_at<_timestamp ORDER BY created_at desc limit 1;
-        IF @duration IS NULL THEN
-            UPDATE trip_events SET reading_stop_id=_reading_id, duration=TIMESTAMPDIFF(MINUTE,created_at,_timestamp) WHERE id=@trip_id;
-        END IF;
-    END IF;
-END;;
 
 DROP TRIGGER IF EXISTS `trig_outbound_after_insert` ;;
 CREATE TRIGGER `trig_outbound_after_insert` AFTER INSERT ON `commands` FOR EACH ROW BEGIN
@@ -408,7 +274,7 @@ CREATE TRIGGER `trig_outbound_after_insert` AFTER INSERT ON `commands` FOR EACH 
 	IF smsxDeviceRecordId is NULL THEN
 		INSERT INTO smsx.devices (device_id, gateway) VALUES (deviceId, dbName);
 	ELSE
-		UPDATE smsx.devices SET gateway=dbName where deviceId=deviceId;
+		UPDATE smsx.devices SET gateway=dbName where device_id=deviceId;
 	END IF;
 
 	insert into smsx.outbound(device_id, gateway_outbound_id, command, start_date_time, status) values (deviceId, NEW.id, NEW.command, NEW.start_date_time, NEW.status);

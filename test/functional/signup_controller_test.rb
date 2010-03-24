@@ -7,21 +7,11 @@ class SignupController; def rescue_action(e) raise e end; end
 class SignupControllerTest < ActionController::TestCase
   
   fixtures :users, :accounts
-  
-   module RequestExtensions
-    def server_name
-      "helo"
-    end
-    def path_info
-      "adsf"
-    end
-  end
-  
+
   def setup
     @controller = SignupController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
-    @request.extend(RequestExtensions)
   end
   
   # Test for signup process which includes creating user, account, and registration email
@@ -42,7 +32,7 @@ class SignupControllerTest < ActionController::TestCase
     assert_equal 'Krusty Krab Restaurant', user.account.company
     assert_equal false, user.account.is_verified
     
-    puts :verify, :id=>user.id, :key=> key
+#    puts :verify, :id=>user.id, :key=> key
     user.reload
     assert_equal false, user.account.is_verified    
   end

@@ -106,24 +106,28 @@ div#header_login #logo {
 /*header CSS End*/	
 
 /*submenu CSS*/	
+ul#submenu li {float: left; margin-right: 5px;}
+ul#submenu li + li {
+	padding-left: 5px;
+	border-left: solid #999999 1px;
+}
+ul#submenu li.additional_report_nav {float: right; border: none;}
 #submenu{
-	background-color:#eaeaea; 
-	padding:7px 2%;
+	color: #999999; 
+	background-color: #EAEAEA; 
+	padding: 7px 2%;
+	height: 14px;
+	list-style-type: none;
+	margin: 0px;
+}
+#submenu .current {
 	color:#00355F; 
 	font-family:Arial, Helvetica, sans-serif; 
 	font-size:12px;
 	font-weight:bold;
-}
-#submenu a {
-	color:#333333; 
-}
-
-#submenu .current{
+	text-decoration:none;}
+#submenu {
 	color:#00355F; 
-	font-family:Arial, Helvetica, sans-serif; 
-	font-size:12px;
-	font-weight:bold;
-	text-decoration:none;
 }
 
 /*submenu CSS End*/	
@@ -192,7 +196,6 @@ table.extra_spacing td { padding: 0px 10px;}
 	
 .input { 
 	width: 175px;
-	height:20px;
 	font-size: 14px;
 }	
 /*form CSS End */
@@ -626,7 +629,9 @@ margin-bottom: 15px;}
 
 h3 {
 	font-size: 18px;
-	color: #003366;}
+	color: #003366;
+	width: 500px;
+	}
 
 h4 {
 	color: #666666;}
@@ -1102,4 +1107,9 @@ div#configuration_submit {
 .dim {
 	color: #666666;
 	font-size: 11px;
+}
+.search {
+	float: right;
+	margin-top: -20px;
+  margin-right: 5px;
 }

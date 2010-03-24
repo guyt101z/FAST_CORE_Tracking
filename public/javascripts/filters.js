@@ -7,5 +7,10 @@ Event.addBehavior({
   '#search_profile_id_equals:change' : function() {
     this.form.method = 'get'
     this.form.submit()
+  },
+  
+  '#search_device_id:change' : function() {
+  	this.form.method = 'get'
+	this.form.submit()
   }
 });

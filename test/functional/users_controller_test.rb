@@ -7,21 +7,11 @@ class UsersController; def rescue_action(e) raise e end; end
 class UsersControllerTest < ActionController::TestCase
   
   fixtures :users,:accounts
-  
-    module RequestExtensions
-    def server_name
-      "helo"
-    end
-    def path_info
-      "adsf"
-    end
-  end
-  
+
   def setup
     @controller = UsersController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
-    @request.extend(RequestExtensions)
   end
   
   def test_index

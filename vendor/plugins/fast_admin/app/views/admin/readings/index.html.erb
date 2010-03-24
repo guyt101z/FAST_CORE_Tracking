@@ -1,0 +1,43 @@
+<% javascript :prototype, :lowpro, :filters %>
+<%= page_entries @readings, {:message=>"(last 30 days)"} %>
+ 
+<%= render :partial=>"/layouts/flash_message"%>    
+
+<ul class="list">
+    <li>
+      <% form_tag do %>
+        <%= select_device(params[:search]) %>
+      <% end %>
+    </li>
+</ul>	
+	
+<table id="ub-table">
+	<tr class="header">	
+		<td>Device</td>		
+		<td>Latitude</td>
+		<td>Longitude</td>
+		<td>Altitude</td>
+		<td>Speed</td>
+		<td>Direction</td>				
+		<td>Created</td>
+     </tr>
+ 	<% last_profile_id = 0 %>
+	<% for reading in @readings %>
+		<tr class="<%= cycle("gray_row", "") %>">
+			<td><%= reading.device.name  %></td>			
+			<td><%= reading.latitude %></td>
+			<td><%= reading.longitude %></td>
+			<td><%= reading.altitude %></td>
+			<td><%= reading.speed  %></td>
+			<td><%= reading.direction  %></td>			
+			<td><%= reading.created_at %></td>
+		</tr>
+	<% end %>
+</table>
+<div class="ublip-pagination">
+     <% if request.post? %>
+		<%=	will_paginate @readings, :conditions => ["device_id = ?", params[:search][:device_id]]%>
+	 <% else %>
+	 	<%=	will_paginate @readings %>
+	 <% end %>	
+</div>

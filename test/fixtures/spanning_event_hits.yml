@@ -1,0 +1,31 @@
+one:
+ id: 10000
+ device_id: 9
+ event_type: delayed
+ ignition: 1
+ speed: 0
+ created_at: <%= Time.now.to_s :db %>
+  
+two:
+ id: 10001
+ device_id: 9
+ event_type: other
+ ignition: 1
+ speed: 0
+ created_at: <%= Time.now.to_s :db %>
+
+three:
+ id: 10002
+ device_id: 9
+ event_type: other
+ ignition: 
+ speed: 0
+ created_at: <%= Time.now.to_s :db %>
+
+four:
+ id: 10003
+ device_id: 9
+ event_type: other
+ ignition: 
+ speed: 
+ created_at: <%= Time.now.to_s :db %>

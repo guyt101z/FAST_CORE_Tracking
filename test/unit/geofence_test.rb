@@ -44,7 +44,7 @@ class GeofenceTest < ActiveSupport::TestCase
         fence3.save!
         fail "should have thrown exception"
       rescue
-        puts $!
+#        puts $!
       end
       raise ActiveRecord::Rollback
     end
@@ -70,7 +70,7 @@ class GeofenceTest < ActiveSupport::TestCase
       fence2.find_fence_num
       fail "should have thrown exception"
     rescue
-      puts $!
+#      puts $!
     end
   end
 end

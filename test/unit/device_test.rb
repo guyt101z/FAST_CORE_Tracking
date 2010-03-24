@@ -2,7 +2,7 @@ require 'test_helper'
 
 class DeviceTest < ActiveSupport::TestCase
   fixtures :devices, :accounts, :geofences, :notifications, :device_profiles, :readings, :stop_events, :idle_events, :runtime_events
-
+  
   # Replace this with your real tests.
   def test_get_by_device_and_account
     device = Device.get_device(1,1)
@@ -56,8 +56,8 @@ class DeviceTest < ActiveSupport::TestCase
   end 
   
   should "paginate search_for_devices" do
-    mock(Device).by_profile_and_name{ mock!.with_latest_gps_reading {
-      mock!.search("params") { mock!.paginate(:page => "1"){ WillPaginate::Collection.new(1,1,1)}}}}
+    mock(Device).by_profile_and_name{
+      mock!.search("params") { mock!.paginate(:page => "1"){ WillPaginate::Collection.new(1,1,1)}}}
     Device.search_for_devices("params", "1")
   end
 end

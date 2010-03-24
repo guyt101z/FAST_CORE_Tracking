@@ -17,20 +17,21 @@ class Device < ActiveRecord::Base
   validates_uniqueness_of :imei
   validates_presence_of :name, :imei
   
-  belongs_to :latest_gps_reading, :class_name => "Reading", :foreign_key => "recent_reading_id"
-  has_one :latest_speed_reading, :class_name => "Reading", :order => "created_at desc", :conditions => "speed is not null"
-  has_one :latest_data_reading, :class_name => "Reading", :order => "created_at desc", :conditions => "ignition is not null"
-  has_one :latest_idle_event, :class_name => "IdleEvent", :order => "created_at desc"
-  has_one :latest_runtime_event, :class_name => "RuntimeEvent", :order => "created_at desc"
-  has_one :latest_stop_event, :class_name => "StopEvent", :order => "created_at desc"
-  
-  has_many :readings, :order => "created_at desc"
-  has_many :geofences, :order => "created_at desc", :limit => 300
-  has_many :notifications, :order => "created_at desc"
-  has_many :stop_events, :order => "created_at desc"
-  has_many :trip_events, :order => "created_at desc"
+  belongs_to :latest_reading, :class_name => "Reading", :foreign_key => "recent_reading_id"
+  has_one :latest_gps_reading, :class_name => "Reading", :order => "created_at DESC", :conditions => "latitude IS NOT NULL"
+  has_one :latest_speed_reading, :class_name => "Reading", :order => "created_at DESC", :conditions => "speed IS NOT NULL"
+  has_one :latest_data_reading, :class_name => "Reading", :order => "created_at DESC", :conditions => "ignition IS NOT NULL"
+  has_one :latest_idle_event, :class_name => "IdleEvent", :order => "created_at DESC"
+  has_one :latest_runtime_event, :class_name => "RuntimeEvent", :order => "created_at DESC"
+  has_one :latest_stop_event, :class_name => "StopEvent", :order => "created_at DESC"
+
+  has_many :readings, :order => "created_at DESC"
+  has_many :geofences, :order => "created_at DESC", :limit => 300
+  has_many :notifications, :order => "created_at DESC"
+  has_many :stop_events, :order => "created_at DESC"
+  has_many :trip_events, :order => "created_at DESC"
   has_many :geofence_violations, :order => "geofence_id ASC", :dependent => :destroy, :conditions => 'EXISTS(SELECT * FROM geofences WHERE geofences.id = geofence_id)'
-  has_many :pending_tasks,:class_name => "MaintenanceTask",:conditions => "completed_at is null",:order => "pastdue_notified desc,reminder_notified desc,established_at desc"
+  has_many :pending_tasks, :class_name => "MaintenanceTask", :conditions => "completed_at IS NULL", :order => "pastdue_notified DESC,reminder_notified DESC,established_at DESC"
 
   named_scope :by_profile_and_name, :order => 'profile_id, name'
   named_scope :with_latest_gps_reading, :include => 'latest_gps_reading'
@@ -40,7 +41,7 @@ class Device < ActiveRecord::Base
   end
   
   def self.search_for_devices(params, page)
-    by_profile_and_name.with_latest_gps_reading.search(params).paginate(:page => page)
+    by_profile_and_name.search(params).paginate(:page => page)
   end
 
   def self.qualified_table_name
@@ -84,7 +85,7 @@ class Device < ActiveRecord::Base
   
   # Get names/ids for list box - don't want to get an entire devices object
   def self.get_names(account_id)
-    find_by_sql(["select id, name from devices where account_id = ? and provision_status_id = 1 order by name", account_id])
+    find(:all, :select => "id, name", :conditions => ["account_id = ? AND provision_status_id = 1", account_id], :order => 'name ASC')
   end
   
   def gateway_device

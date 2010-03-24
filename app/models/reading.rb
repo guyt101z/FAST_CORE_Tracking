@@ -10,14 +10,14 @@ class Reading < ActiveRecord::Base
   acts_as_mappable  :lat_column_name => :latitude,:lng_column_name => :longitude
   
   
-  def speed
-    spd = read_attribute(:speed)
-    if spd.nil?
-      "N/A"
-    else
-      read_attribute(:speed).round
-    end
+  def self.per_page
+    25
   end
+  
+  def speed
+    read_attribute(:speed).round if read_attribute(:speed)
+  end
+
   
   def get_fence_name
     return nil if self.geofence_id.zero? || self.geofence_id.blank?
@@ -28,7 +28,7 @@ class Reading < ActiveRecord::Base
     return '' if self.geofence_id.zero? || self.geofence_id.blank?
     @fence_description ||= self.geofence_event_type + 'ing ' + (get_fence_name() || 'geofence')
   end
-    
+     
   def short_address
     if(admin_name1.nil?)
       latitude.to_s + ", " + longitude.to_s

@@ -1,5 +1,6 @@
-<h3>Accounts (<%= @accounts.size %> total)</h3><br/>
-
+<%= page_entries @accounts %>
+<%= render :partial => "/layouts/search" %>
+<div>&nbsp;</div>
 <%= render :partial=>"/layouts/flash_message" %>    
 
 <table  id="ub-table">
@@ -12,6 +13,8 @@
 		<% end %>	
 </table>
 
-<div  class="ublip-pagination">
-  <%= will_paginate @accounts%>
-</div>	
+
+<div class="ublip-pagination">
+	 <%= will_paginate @accounts %>	
+</div>
+	

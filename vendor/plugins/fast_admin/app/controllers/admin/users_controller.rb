@@ -7,9 +7,15 @@ class Admin::UsersController < ApplicationController
     render :text => 'test'
   end
   
-  def index
+  def index 
     @users = User.search_for_users(params[:search], params[:page])
     @accounts = Account.active.by_company
+  end
+  def search
+    @keyword_search = params[:keyword_search] || ""
+    @users = User.first_name_or_last_name_or_email_like(params[:keyword_search]).paginate(:per_page=>ResultCount, :page => params[:page], :order => "last_name, first_name asc")      
+    @accounts = Account.active.by_company
+    render :action => :index
   end
 
   def show

@@ -7,6 +7,11 @@ class NotificationState < ActiveRecord::Base
    @@instance ||= (find(:first) or new) 
   end
   
+  def any_readings?
+    raise "Reading bounds not initialized" unless @next_reading_id
+    last_reading_id < @next_reading_id
+  end
+  
   def begin_reading_bounds
     next_reading = Reading.find(:first,:order => "id desc")
     @next_reading_id = next_reading ? next_reading.id : 0

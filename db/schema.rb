@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20090812224428) do
+ActiveRecord::Schema.define(:version => 20091203005626) do
 
   create_table "accounts", :force => true do |t|
     t.string   "company",          :limit => 75
@@ -37,6 +37,10 @@ ActiveRecord::Schema.define(:version => 20090812224428) do
     t.datetime "start_date_time"
     t.datetime "end_date_time"
     t.string   "transaction_id",  :limit => 25
+  end
+
+  create_table "debug", :id => false, :force => true do |t|
+    t.string "message"
   end
 
   create_table "device_profiles", :force => true do |t|
@@ -128,7 +132,10 @@ ActiveRecord::Schema.define(:version => 20090812224428) do
     t.integer  "device_id"
     t.integer  "reading_id"
     t.datetime "created_at"
+    t.boolean  "suspect"
   end
+
+  add_index "idle_events", ["device_id", "created_at", "suspect"], :name => "index_idle_events_on_device_id_and_created_at_and_suspect"
 
   create_table "maintenance_tasks", :force => true do |t|
     t.integer  "device_id"
@@ -215,6 +222,16 @@ ActiveRecord::Schema.define(:version => 20090812224428) do
   add_index "sessions", ["session_id"], :name => "index_sessions_on_session_id"
   add_index "sessions", ["updated_at"], :name => "index_sessions_on_updated_at"
 
+  create_table "spanning_event_hits", :force => true do |t|
+    t.integer  "device_id"
+    t.string   "event_type"
+    t.boolean  "ignition"
+    t.float    "speed"
+    t.datetime "created_at"
+  end
+
+  add_index "spanning_event_hits", ["created_at", "id"], :name => "index_spanning_event_hits_on_created_at_and_id"
+
   create_table "stop_events", :force => true do |t|
     t.float    "latitude"
     t.float    "longitude"
@@ -222,7 +239,10 @@ ActiveRecord::Schema.define(:version => 20090812224428) do
     t.integer  "device_id"
     t.datetime "created_at"
     t.integer  "reading_id"
+    t.boolean  "suspect"
   end
+
+  add_index "stop_events", ["device_id", "created_at", "suspect"], :name => "index_stop_events_on_device_id_and_created_at_and_suspect"
 
   create_table "trip_events", :force => true do |t|
     t.integer  "device_id"
@@ -232,7 +252,10 @@ ActiveRecord::Schema.define(:version => 20090812224428) do
     t.datetime "created_at"
     t.float    "distance"
     t.integer  "idle"
+    t.boolean  "suspect"
   end
+
+  add_index "trip_events", ["device_id", "created_at", "suspect"], :name => "index_trip_events_on_device_id_and_created_at_and_suspect"
 
   create_table "users", :force => true do |t|
     t.string   "first_name",                :limit => 30
@@ -248,7 +271,7 @@ ActiveRecord::Schema.define(:version => 20090812224428) do
     t.boolean  "is_master",                               :default => false
     t.boolean  "is_admin",                                :default => false
     t.datetime "last_login_dt"
-    t.integer  "enotify",                   :limit => 1,  :default => 0
+    t.integer  "enotify",                   :limit => 2,  :default => 0
     t.string   "time_zone"
     t.boolean  "is_super_admin",                          :default => false
     t.string   "access_key"

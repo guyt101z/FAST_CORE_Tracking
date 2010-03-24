@@ -7,22 +7,11 @@ class ReportsController; def rescue_action(e) raise e end; end
 class ReportsControllerTest < ActionController::TestCase
 
   fixtures :users, :readings, :stop_events, :idle_events, :runtime_events, :device_profiles, :devices, :accounts
-  
-  module RequestExtensions
-    def server_name
-      "yoohoodilly"
-    end
-    def path_info
-      "asdf"
-    end
-  end
-  
-  
+
   def setup
     @controller = ReportsController.new
     @request    = ActionController::TestRequest.new 
     @response   = ActionController::TestResponse.new
-    @request.extend(RequestExtensions)
   end
   
   # Test all readings report

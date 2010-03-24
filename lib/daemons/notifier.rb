@@ -20,22 +20,37 @@ Signal.trap("TERM") do
   $running = false
 end
 
-logger = Logger.new(File.join(RAILS_ROOT,'log','notifier.rb.log'), 'weekly')
+logger = TaskUtil.get_log_and_check_running('notifier',$0,ARGV)
 
 begin
   while($running) do
 
-    logger.info("This notification daemon is still running at #{Time.now}.\n")
+    logger.info("The Notification and Spanning-Event-Hit (#{SpanningEventHit.count}) daemon is still running at #{Time.now}.\n")
+
+    TripEvent.identify_suspect_events(logger)
+    IdleEvent.identify_suspect_events(logger)
+    StopEvent.identify_suspect_events(logger) # not currently needed, but keeping up just in case...
+    SpanningEventHit.process_queue(true) # NOTE: if performance becomes an issue having these two logical processes together, put this in another daemon
 
     NotificationState.instance.begin_reading_bounds
 
-    Notifier.send_geofence_notifications(logger)
-    Notifier.send_device_offline_notifications(logger)
-    Notifier.send_gpio_notifications(logger)
-    Notifier.send_speed_notifications(logger)
+    if NotificationState.instance.any_readings?
+      [ :send_geofence_notifications,
+        :send_device_offline_notifications,
+        :send_gpio_notifications,
+        :send_speed_notifications].each do | send_notifications_method |
+        begin
+          Notifier.send(send_notifications_method,logger)
+        rescue
+          logger.info "Fatal error in #{send_notifications_method} at #{Time.now.inspect}, error: #{$!}"
+          $!.backtrace.each {|line| logger.info line}
+        end
+      end
+    end 
 
     NotificationState.instance.end_reading_bounds
 
+    #doesn't depend on readings, so doesn't belong inside NotificationState block
     Notifier.send_maintenance_notifications(logger)
 
     $sleeping = true

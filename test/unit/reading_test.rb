@@ -1,26 +1,40 @@
 require 'test_helper'
 
 class ReadingTest < ActiveSupport::TestCase
-  fixtures :readings, :geofences
-  
+
+
+  def setup
+    Reading.delete_all
+    Device.delete_all
+    Account.delete_all
+  end
   
   def test_address
-    assert_equal "Bigfork, MT", readings(:reading5).short_address
-    assert_equal "6762 Big Springs Dr, Arlington, TX", readings(:reading1).short_address
-    assert_equal "Inwood Rd, Farmers Branch, TX", readings(:reading2).short_address
-    assert_equal "32.9395, -96.8244", readings(:reading3).short_address
-    assert_equal "32.94, -96.8217", readings(:reading4).short_address
-    assert_equal "32.9514, -96.8228", readings(:reading6).short_address
+    reading5 = Factory(:reading, :place_name => 'Bigfork', :admin_name1 => 'MT')
+    assert_equal "Bigfork, MT", reading5.short_address
+
+    reading1 = Factory(:reading, :street => 'Big Springs Dr', :street_number => '6762', :place_name => 'Arlington', :admin_name1 => 'TX')
+    assert_equal "6762 Big Springs Dr, Arlington, TX", reading1.short_address
+
+    reading2 = Factory(:reading, :place_name => 'Farmers Branch', :street => 'Inwood Rd', :admin_name1 => 'TX')
+    assert_equal "Inwood Rd, Farmers Branch, TX", reading2.short_address
+
+    reading3 = Factory(:reading)
+    assert_equal "1.2, 2.3", reading3.short_address
   end
   
   def test_speed_round
-    assert_equal 29, readings(:reading1).speed
-    assert_equal 39, readings(:reading2).speed  
+    reading1 = Factory(:reading, :speed => 28.5)
+    reading2 = Factory(:reading, :speed => 39.4)
+    assert_equal 29, reading1.speed
+    assert_equal 39, reading2.speed
   end
   
   def test_null_speed
-    assert_equal "N/A", readings(:reading3).speed
-    assert_not_equal "N/A", readings(:reading4).speed
+    reading1 = Factory(:reading, :speed => nil)
+    reading2 = Factory(:reading, :speed => 55)
+    assert_equal nil, reading1.speed
+    assert_not_equal nil, reading2.speed
   end
   
   def test_distance
@@ -36,15 +50,18 @@ class ReadingTest < ActiveSupport::TestCase
     reading3.latitude=32.6752
     reading3.longitude=-97.0425
     
-    puts reading1.distance_to(reading2)*1000
-    puts reading1.distance_to(reading3)*1000
+#    puts reading1.distance_to(reading2)*1000
+#    puts reading1.distance_to(reading3)*1000
   end
    
   def test_fence_name
-    assert_nil readings(:reading1).get_fence_name
-    assert_equal "work", readings(:readings_224).get_fence_name
+    reading_no_fence = Factory(:reading)
+    geofence = Factory(:geofence)
+    reading_with_fence = Factory(:reading, :geofence => geofence)
+    assert_nil reading_no_fence.get_fence_name
+    assert_equal "Garth", reading_with_fence.get_fence_name
     
-    reading = readings(:reading1)
+    reading = Factory(:reading)
     reading.geofence_id = 1234 #bad geofence ID
     assert_nil reading.get_fence_name()
   end

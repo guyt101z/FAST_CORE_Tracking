@@ -57,8 +57,8 @@ class TriggerTest < ActiveSupport::TestCase
   def test_account_level
     now = Time.now
     reading = save_reading(32.7977, -79.9603, 1, now-900)
-    puts "device id: #{reading.device_id}"
-    puts "event_type #{reading.event_type}"
+#    puts "device id: #{reading.device_id}"
+#    puts "event_type #{reading.event_type}"
     assert_equal "enter", reading.geofence_event_type
     assert_equal 4, reading.geofence_id
 

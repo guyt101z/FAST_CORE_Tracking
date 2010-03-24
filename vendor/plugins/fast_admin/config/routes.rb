@@ -4,4 +4,5 @@ ActionController::Routing::Routes.draw do |map|
   map.connect 'admin/users/:action', :controller => 'admin/users'
   map.connect 'admin/devices/:action', :controller => 'admin/devices'
   map.connect 'admin/device_profiles/:action', :controller => 'admin/device_profiles'
+  map.connect 'admin/readings/:action', :controller => 'admin/readings'
 end

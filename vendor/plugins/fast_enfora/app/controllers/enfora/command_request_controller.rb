@@ -57,7 +57,7 @@ class Enfora::CommandRequestController < Enfora::CommonController
     @device = Enfora::Device.find(params[:id]) if params[:id]
     @device ||= Enfora::Device.new
     conditions = "device_id = #{@device.id}" if @device.id
-    @command_requests = Enfora::CommandRequest.find(:all,:conditions => conditions,:order => "start_date_time desc")
+    @command_requests = Enfora::CommandRequest.paginate(:all,:conditions => conditions,:order => "start_date_time desc", :page => params[:page])
   end
   
   def check_status

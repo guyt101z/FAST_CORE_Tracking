@@ -23,7 +23,7 @@ module HomeHelper
       if device.latest_gps_reading.short_address == ', '
         content << %(#{device.name})
       else
-        content << %(<a href="javascript:centerMap(#{device.id});highlightRow(#{device.id});" title="Center map on this device" class="link-all1">#{device.name}</a>)
+        content << %(<a href="javascript:centerMapOnDevice(#{device.id});highlightRow(#{device.id});" title="Center map on this device" class="link-all1">#{device.name}</a>)
       end
     else
       content << %(#{device.name})
@@ -58,6 +58,30 @@ module HomeHelper
     content
   end
 
+  def add_device_js(device, override = {})
+    return "" if device.latest_gps_reading.nil? || device.latest_gps_reading.short_address == ', '
+
+    self.class.send(:include, ActionView::Helpers::DateHelper) #for time_ago_in_words
+    attributes = {
+      :id => device.id,
+      :name => device.name,
+      :lat => device.latest_gps_reading.latitude,
+      :lng => device.latest_gps_reading.longitude,
+      :address => device.latest_gps_reading.short_address,
+      :dt => time_ago_in_words(device.latest_gps_reading.created_at) + ' ago',
+      :note => escape_javascript(device.latest_gps_reading.note),
+      :status => latest_status_html(device),
+      :direction => device.latest_gps_reading.direction,
+      :icon_id => device.icon_id,
+      :group_id => device.group_id,
+      :geofence => device.latest_gps_reading.fence_description
+    }
+    
+    attributes.update(override)
+
+    "<script>devices.push(#{attributes.to_json});</script>"
+  end
+
   def show_statistics(device)
     # TODO replace with real data
     @stop_total ||= 1
@@ -69,7 +93,7 @@ module HomeHelper
     content = ""
     content << %(<tr class="#{cycle('dark_row', 'light_row')}" id="row#{device.id}"> <td>)
     if device.latest_gps_reading
-      content << %(<a href="javascript:centerMap(#{device.id});highlightRow(#{device.id});" title="Center map on this device" class="link-all1">#{device.name}</a>)
+      content << %(<a href="javascript:centerMapOnDevice(#{device.id});highlightRow(#{device.id});" title="Center map on this device" class="link-all1">#{device.name}</a>)
     else
       content << %(#{device.name})
     end
@@ -91,7 +115,7 @@ module HomeHelper
     content << %(<tr class="#{cycle('dark_row', 'light_row')}" id="row#{device.id}">)
 
     if device.latest_gps_reading
-      content << %(<td><a href="javascript:centerMap(#{device.id});highlightRow(#{device.id});" title="Center map on this device" class="link-all1">#{device.name}</a></td>)
+      content << %(<td><a href="javascript:centerMapOnDevice(#{device.id});highlightRow(#{device.id});" title="Center map on this device" class="link-all1">#{device.name}</a></td>)
     else
       content << %(<td>#{device.name}</td>)
     end      

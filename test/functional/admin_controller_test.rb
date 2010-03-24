@@ -7,21 +7,11 @@ class AdminController; def rescue_action(e) raise e end; end
 class AdminControllerTest < ActionController::TestCase
   
   fixtures :users, :accounts, :devices, :device_profiles
-  
-  module RequestExtensions
-    def server_name
-      "helo"
-    end
-    def path_info
-      "adsf"
-    end
-  end
-  
+
   def setup
     @controller = AdminController.new
     @request    = ActionController::TestRequest.new
     @response   = ActionController::TestResponse.new
-    @request.extend(RequestExtensions)
   end
 
   def test_not_logged_in
@@ -41,7 +31,7 @@ class AdminControllerTest < ActionController::TestCase
   
   def test_page_contents
     get :index, {}, {:user => users(:testuser).id, :account_id => accounts(:app).id, :is_super_admin => users(:testuser).is_super_admin}
-    assert_select "ul.list li", 4 # Verify 3 elements in the list
+    assert_select "ul.list li", 5
     assert_select "ul.list li:first-child", :text => "6 active Accounts - view or create"
     assert_select "ul.list li:nth-child(2)", :text => "7 active Users - view or create"
     assert_select "ul.list li:nth-child(3)", :text => "7 active Devices - view or create"

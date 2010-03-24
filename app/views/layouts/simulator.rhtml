@@ -7,48 +7,55 @@
     <%= stylesheet_link_tag "common" %>
     <%= javascript_include_tag "geofence" %>
     <%= javascript_include_tag :defaults %>
+
+    <%= javascript_include_tag "classes/LatLon", "classes/Bounds", "classes/Map" %>
+    <%= javascript_include_tag "openlayers/OpenLayers", "openlayers/OpenStreetMap" %>
     
     <%= render :partial => 'layouts/includes/map_key' %>
     <script>
-			var device_id;
-			var lat;
-			var lng;
+			var device_id = 0;
+
+            var mapEngine = "<%= MAP_ENGINE %>";
 			var map;
-			var gmap;
+
 			var base_url = '/simulator/insert_reading?device_id=';
 			
-			function load() {
-				if (GBrowserIsCompatible()) {	
-					gmap = new GMap2(document.getElementById("sim_map"));
-					gmap.addControl(new GLargeMapControl());
-					gmap.setCenter(new GLatLng(33.4419, -96.1419), 3);
-					
-					GEvent.addListener(gmap, "click", function(marker,point) {
-						gmap.addOverlay(new GMarker(point));
-						lat = point.y;
-						lng = point.x;
-						insertData();
-					});
-				}
+            function load()
+            {
+                map = new Map(mapEngine, 'sim_map');
+                map.setCenter(new LatLon(37.0625, -95.677068), zoom);
+                map.addEventListener('map_clicked', function(point)
+                {
+                    if(device_id == 0)
+                    {
+                        alert('Please select a device.');
+                    }
+                    else
+                    {
+                        insertReading(device_id, point);
+                    }
+                });
 			}
-			
-			function insertData() {
-				var url = base_url + device_id + '&lat=' + lat + '&lng=' + lng;
-				
-				GDownloadUrl(url, function(data, responseCode) {
-					//alert('done');
-				});
-			}
-			
-			function displayGeofence(e) {
+
+            function displayGeofence(e)
+            {
 				var arr = e.options[e.selectedIndex].value.split(",");
 				var id = arr[0];
 				var lat = parseFloat(arr[1]);
 				var lng = parseFloat(arr[2]);
 				var radius = parseFloat(arr[3]);
-				var p = new GLatLng(lat,lng);
-				drawGeofence(p, radius);
-				gmap.setCenter(p, 13);
+				var p = new LatLon(lat, lng);
+                map.drawGeofence(p, radius);
+				map.setCenter(p, 13);
+			}
+			
+            function insertReading(deviceId, point)
+            {
+				var url = base_url + deviceId + '&lat=' + point.lat + '&lng=' + point.lon;
+				
+				GDownloadUrl(url, function(data, responseCode) {
+                    map.createMarker('sim_point', point, '/icons/ublip_marker.png');
+				});
 			}
 			
 			window.onload = load;

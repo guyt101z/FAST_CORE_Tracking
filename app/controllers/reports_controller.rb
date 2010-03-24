@@ -24,27 +24,28 @@ class ReportsController < ApplicationController
 
   def trip
     get_start_and_end_date
-    @device = Device.find(params[:id])
-    @device_names = Device.get_names(session[:account_id])
-
+    get_devices()
+ 
     needy_events = TripEvent.find(:all,:conditions => ["device_id = ? AND created_at BETWEEN ? AND ? AND duration IS NOT NULL AND (distance IS NULL OR idle IS NULL)",params[:id],@start_dt_str, @end_dt_str])
     for event in needy_events
       event.update_stats
     end
-
+ 
     @trip_events = TripEvent.paginate(:per_page=>ResultCount, :page=>params[:page],
-      :conditions => ["device_id = ? and created_at between ? and ?",params[:id],@start_dt_str, @end_dt_str],
+      :conditions => get_device_and_dates_with_duration_conditions(:trip_events),
       :readonly => true,# NOTE: this causes some problems, but would be nice... :include => [:reading_start,:reading_stop],
       :order => "created_at desc")
-    @readings = @trip_events
-    @record_count = TripEvent.count('id', :conditions => ["device_id = ? and created_at between ? and ?", params[:id], @start_dt_str, @end_dt_str])
+ 
+    @readings = @trip_events # TODO -- remove this???
+ 
+    @record_count = TripEvent.count('id', :conditions => get_device_and_dates_with_duration_conditions(:trip_events))
     @actual_record_count = @record_count # this is because currently we are putting  MAX_LIMIT on export data so export and view data going to be diferent in numbers.
     @record_count = MAX_LIMIT if @record_count > MAX_LIMIT
-
+ 
     @total_travel_time = TripEvent.sum(:duration,:conditions => ["id in (?)", @trip_events.collect(&:id)])
     @total_idle_time = TripEvent.sum(:idle,:conditions => ["id in (?)", @trip_events.collect(&:id)])
     @total_distance = TripEvent.sum(:distance,:conditions => ["id in (?)", @trip_events.collect(&:id)])
-    @max_speed = Reading.maximum(:speed,:conditions => ['device_id = ? and created_at between ? and ?',params[:id],@start_dt_str, @end_dt_str])
+    @max_speed = Reading.maximum(:speed,:conditions => get_device_and_dates_conditions) || 0
   end
   
   def trip_detail
@@ -102,7 +103,7 @@ class ReportsController < ApplicationController
     get_start_and_end_date
     @device = Device.find(params[:id])
     @device_names = Device.get_names(session[:account_id])
-    conditions = get_device_and_dates_with_duration_conditions
+    conditions = get_device_and_dates_with_duration_conditions(:stop_events)
     @stop_events = StopEvent.paginate(:per_page=>ResultCount, :page=>params[:page], :conditions => conditions, :order => "created_at desc")
     @readings = @stop_events
     @record_count = StopEvent.count('id', :conditions => conditions)
@@ -117,7 +118,7 @@ class ReportsController < ApplicationController
     get_start_and_end_date
     @device = Device.find(params[:id])
     @device_names = Device.get_names(session[:account_id])
-    conditions = get_device_and_dates_with_duration_conditions
+    conditions = get_device_and_dates_with_duration_conditions(:idle_events)
     @idle_events = IdleEvent.paginate(:per_page=>ResultCount, :page=>params[:page], :conditions => conditions, :order => "created_at desc")
     @readings = @idle_events
     @record_count = IdleEvent.count('id', :conditions => conditions)
@@ -132,7 +133,7 @@ class ReportsController < ApplicationController
     get_start_and_end_date
     @device = Device.find(params[:id])
     @device_names = Device.get_names(session[:account_id])
-    conditions = get_device_and_dates_with_duration_conditions
+    conditions = get_device_and_dates_with_duration_conditions(:runtime_events,false)
     @runtime_events = RuntimeEvent.paginate(:per_page=>ResultCount, :page=>params[:page],:conditions => conditions,:order => "created_at desc")
     @runtime_total = RuntimeEvent.sum(:duration,:conditions => conditions)
     active_event = RuntimeEvent.find(:first,:conditions => "#{conditions} and duration is null")
@@ -192,6 +193,17 @@ class ReportsController < ApplicationController
     redirect_to :back
   end
 
+  def all_events
+    get_start_and_end_date
+    get_devices()
+    @readings = Reading.find_by_sql("SELECT readings.id,readings.created_at,readings.ignition,readings.speed,readings.event_type,t1.id AS trip_start_id,(SELECT t2.id FROM trip_events t2 WHERE t2.reading_stop_id = readings.id) AS trip_stop_id,t1.suspect AS trip_suspect,t1.duration AS trip_duration,i.id AS idle_id,i.duration,i.suspect AS idle_suspect,i.duration AS idle_duration,s.id AS stop_id,s.duration AS stop_duration,s.suspect AS stop_suspect FROM readings LEFT JOIN trip_events t1 ON readings.id = reading_start_id LEFT JOIN idle_events i ON i.reading_id = readings.id LEFT JOIN stop_events s ON s.reading_id = readings.id WHERE #{get_device_and_dates_conditions} ORDER BY readings.created_at,readings.id")
+    @record_count = @readings.length
+    @actual_record_count = @record_count
+  rescue
+    flash[:error] = $!.to_s
+    @readings,@record_count,@actual_record_count = [],0,0
+  end
+
   # Export report data to CSV
   def export
     params[:page] = 1 unless params[:page]
@@ -199,11 +211,11 @@ class ReportsController < ApplicationController
     
     case params[:type]
       when 'stop'
-        return export_events(StopEvent.find(:all, {:order => "created_at desc", :conditions => get_device_and_dates_with_duration_conditions}))
+        return export_events(StopEvent.find(:all, {:order => "created_at desc", :conditions => get_device_and_dates_with_duration_conditions(:stop_events)}))
       when 'idle'
-        return export_events(IdleEvent.find(:all, {:order => "created_at desc", :conditions => get_device_and_dates_with_duration_conditions}))
+        return export_events(IdleEvent.find(:all, {:order => "created_at desc", :conditions => get_device_and_dates_with_duration_conditions(:idle_events)}))
       when 'runtime'
-        return export_events(RuntimeEvent.find(:all, {:order => "created_at desc", :conditions => get_device_and_dates_with_duration_conditions}))
+        return export_events(RuntimeEvent.find(:all, {:order => "created_at desc", :conditions => get_device_and_dates_with_duration_conditions(:runtime_events,false)}))
       when 'maintenance'
         return export_maintenance
       when 'trip'
@@ -308,14 +320,25 @@ private
   end
   
   
-  def get_device_and_dates_conditions
-    "device_id = #{params[:id]} and created_at between '#{@start_dt_str}' and '#{@end_dt_str}'"
-  end
-  
-  def get_device_and_dates_with_duration_conditions
-    return "device_id = #{params[:id]} and ((created_at between '#{@start_dt_str}' and '#{@end_dt_str}') or (duration is null))" if Time.now < @end_dt_str.to_time
-    get_device_and_dates_conditions
-  end
+    def get_device_and_dates_conditions(table = :readings,optional_clause = nil)
+      "#{table}.device_id = #{params[:id]} AND #{table}.created_at BETWEEN '#{@start_dt_str}' AND '#{@end_dt_str}'#{optional_clause}"
+    end
+
+    def get_device_and_dates_with_duration_conditions(table = :readings,possible_suspects = true)
+      return "device_id = #{params[:id]} AND ((created_at BETWEEN '#{@start_dt_str}' AND '#{@end_dt_str}') OR (duration IS NULL))#{suspect_clause(possible_suspects)}" if Time.now < @end_dt_str.to_time
+      get_device_and_dates_conditions(table,suspect_clause(possible_suspects))
+    end
+
+    def suspect_clause(possible_suspects)
+  #    @suspect_clause ||= current_user.is_super_super_admin? ? "" : " and (suspect = 0 or suspect is null)" if possible_suspects
+      @suspect_clause ||= " and (suspect = 0 or suspect is null)" if possible_suspects
+    end
+
+    def get_devices
+      @device = Device.find(params[:id])    
+      @device_names = Device.get_names(session[:account_id])
+    end
+
 
   def get_start_and_end_date
     if params[:start_date].blank?

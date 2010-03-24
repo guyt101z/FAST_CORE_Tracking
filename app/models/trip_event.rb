@@ -1,4 +1,5 @@
 class TripEvent < ActiveRecord::Base
+  extend SuspectEvent
   belongs_to :device
   belongs_to :reading_start,:class_name => "Reading"
   belongs_to :reading_stop,:class_name => "Reading"

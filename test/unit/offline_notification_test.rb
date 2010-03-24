@@ -2,7 +2,7 @@ require 'test_helper'
 
 module MockOfflineNotifier
   def deliver_device_offline(user, device) 
-    puts "delivering #{device.name} to #{user.first_name}"
+#    puts "delivering #{device.name} to #{user.first_name}"
     @test.record_notification(user,device)
   end
   def set_test(test)
@@ -86,8 +86,8 @@ end
       group2 = Factory.create(:group, :account => @user.account)
       @device1 = Factory.create(:device, :account => @user.account, :group => group1, :last_online_time => Time.at(0))
       @device2 = Factory.create(:device, :account => @user.account, :group => group2, :last_online_time => Time.at(0))
-      puts "device 1 in group #{@device1.group.name}"
-      puts "device 2 in group #{@device2.group.name}"
+#      puts "device 1 in group #{@device1.group.name}"
+#      puts "device 2 in group #{@device2.group.name}"
       gn = Factory.create(:group_notification, :user => @user, :group => group1)
       Notifier.send_device_offline_notifications(Logger.new("logger"))
     end

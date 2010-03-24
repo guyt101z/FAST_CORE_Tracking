@@ -12,8 +12,15 @@ class Admin::DevicesController < ApplicationController
   end
   
   def index
-    @devices = Device.search_for_devices(params[:search], params[:page])
+      @devices = Device.search_for_devices(params[:search], params[:page])
+      Account.active.by_company
+  end
+  
+  def search
+    @keyword_search = params[:keyword_search] || ""
+    @devices = Device.name_or_imei_like(params[:keyword_search]).paginate(:per_page=>ResultCount, :page => params[:page], :order => "name asc")      
     Account.active.by_company
+    render :action => :index
   end
 
   def show

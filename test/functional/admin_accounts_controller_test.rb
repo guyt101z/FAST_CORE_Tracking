@@ -2,19 +2,6 @@ require 'test_helper'
 class Admin::AccountsControllerTest < ActionController::TestCase
   
   fixtures :users, :accounts
-  
-  module RequestExtensions
-    def server_name
-      "helo"
-    end
-    def path_info
-      "adsf"
-    end
-  end
-  
-  def setup
-    @request.extend(RequestExtensions)
-  end
 
   def test_index
     get :index, {}, get_user
@@ -93,8 +80,4 @@ class Admin::AccountsControllerTest < ActionController::TestCase
     {:user => users(:testuser).id, :account_id => accounts(:app).id, :is_super_admin => users(:testuser).is_super_admin}
   end
 
-  should "paginate index accounts" do
-    mock(Account).active{ mock!.by_subdomain{ mock!.paginate(:page => "1"){ WillPaginate::Collection.new(1,1,1)}}}
-    get_with_user :index, {:page => 1}, :testuser
-  end
 end
