@@ -133,11 +133,18 @@ module HomeHelper
         else
           content << %(<td>about #{-(remaining_runtime / 60 / 60).round} runtime hours ago</td>)
         end
-      else
+      elsif next_task.is_runtime?
         if next_task.target_at > Time.now
           content << %(<td>in #{time_ago_in_words(next_task.target_at)}</td>)
         else
           content << %(<td>#{time_ago_in_words(next_task.target_at)} ago</td>)
+        end
+      elsif next_task.is_mileage?
+        remaining_miles = next_task.target_mileage - device.total_mileage
+        if remaining_miles > 0
+          content << %(<td>in #{remaining_miles.round(1)} miles</td>)
+        else remaining_miles > 0
+          content << %(<td>#{-1 * remaining_miles.round(1)} miles ago</td>)
         end
       end
   

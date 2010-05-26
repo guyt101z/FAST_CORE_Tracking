@@ -20,14 +20,16 @@
   <% for task in @tasks %>
     <div class="crt_group1">
       <%
-	  	task_summary = nil
-		if task.pastdue_notified
-		  task_summary = "#{task.device.name} was <i><b>past due</b></i> on #{task.pastdue_notified.strftime('%Y-%m-%d')}"
-        elsif task.is_scheduled?
-		  task_summary = "#{task.device.name} is due in #{time_ago_in_words(task.target_at)}"
-        else
-		  task_summary = "#{task.device.name} is due in about #{(task.target_runtime - task.reviewed_runtime) / 60 / 60} runtime hours"
-        end
+  		task_summary = nil
+  		if task.pastdue_notified
+  			task_summary = "#{task.device.name} was <i><b>past due</b></i> on #{task.pastdue_notified.strftime('%Y-%m-%d')}"
+  		elsif task.is_scheduled?
+  			task_summary = "#{task.device.name} is due in #{time_ago_in_words(task.target_at)}"
+  		elsif task.is_runtime?
+  			task_summary = "#{task.device.name} is due in about #{(task.target_runtime - task.reviewed_runtime) / 60 / 60} runtime hours"
+  		elsif task.is_mileage?
+  			task_summary = "#{task.device.name} is due in about #{(task.target_mileage - task.device.total_mileage).round(1)} miles"
+  		end
       %>
       <%= link_to task_summary,{:controller=>"maintenance", :action=>"complete", :id=>task.id},:class => "grayboldtext"%>    
     </div>

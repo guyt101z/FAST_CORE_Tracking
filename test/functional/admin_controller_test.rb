@@ -32,9 +32,9 @@ class AdminControllerTest < ActionController::TestCase
   def test_page_contents
     get :index, {}, {:user => users(:testuser).id, :account_id => accounts(:app).id, :is_super_admin => users(:testuser).is_super_admin}
     assert_select "ul.list li", 5
-    assert_select "ul.list li:first-child", :text => "6 active Accounts - view or create"
-    assert_select "ul.list li:nth-child(2)", :text => "7 active Users - view or create"
-    assert_select "ul.list li:nth-child(3)", :text => "7 active Devices - view or create"
-    assert_select "ul.list li:last-child", :text => "3 active Device Profiles - view or create"
+    assert_select "ul.list li:first-child", :text => "6 Accounts - view or create"
+    assert_select "ul.list li:nth-child(2)", :text => "7 Users - view or create"
+    assert_select "ul.list li:nth-child(3)", :text => "7 Devices - view or create"
+    assert_select "ul.list li:last-child", :text => "3 Device Profiles - view or create"
   end
 end

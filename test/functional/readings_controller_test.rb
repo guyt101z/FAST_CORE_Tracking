@@ -25,7 +25,7 @@ class ReadingsControllerTest < ActionController::TestCase
     get :last, { :id => "1"}, {:user => users(:testuser), :user_id => users(:testuser), :account_id => accounts(:app)}
     
     assert_select "channel>item" do |element|
-       assert_tag :tag => "georss:point", :content => "32.6358 -97.1757"
+       assert_tag :tag => "georss:point", :content => "32.63585 -97.17569"
     end
   end
   

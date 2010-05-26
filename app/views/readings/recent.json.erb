@@ -14,7 +14,7 @@
         }
 
         if device.latest_gps_reading
-            formatted_device.merge(
+            formatted_device.merge!(
                 {
                     :lat => device.latest_gps_reading.latitude,
                     :lng => device.latest_gps_reading.longitude,
@@ -24,6 +24,8 @@
                 }
             )
         end
+
+        formatted_device
     end
 
     formatted_devices.to_json()

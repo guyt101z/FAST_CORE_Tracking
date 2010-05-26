@@ -9,43 +9,45 @@
                     <th>Completed By</th>
                 </tr>
                 <% for task in @readings %>
-	                <tr class="<%= cycle('dark_row', 'light_row') %>" id="row<%= task.id %>">
-                        <% if task.completed_at %>
-		                    <td><%= task.description or '&nbsp;' %></td>
-	                        <td><%= task.completed_at.strftime("%Y-%m-%d") %></td>
-							<td><%= task.completed_by or '-' %></td>
-                        <% elsif task.pastdue_notified %>
-		                    <td><a href="/maintenance/complete/<%= task.id%>" title="Complete task"><%= task.description %></a></td>
-							<td colspan="2">
-		                    	<a href="/maintenance/complete/<%= task.id%>" title="Complete task"><b><i>
-									<% if task.is_scheduled? %>
-				                        Past due on <%= task.target_at.strftime("%Y-%m-%d") %>
-									<% else %>
-				                        Past due about <%= (task.target_runtime - task.reviewed_runtime).abs / 60 / 60 %> runtime hours ago
-									<% end %>
-								</i></b></a>
-							</td>
-						<% elsif task.reminder_notified %>
-		                    <td><a href="/maintenance/complete/<%= task.id%>" title="Complete task"><%= task.description %></a></td>
-							<td colspan="2">
-		                    	<a href="/maintenance/complete/<%= task.id%>" title="Complete task"><i>
-									<% if task.is_scheduled? %>
-				                        Due on <%= task.target_at.strftime("%Y-%m-%d") %>
-									<% else %>
-				                        Due in about <%= (task.target_runtime - task.reviewed_runtime) / 60 / 60 %> runtime hours
-									<% end %>
-								</i></a>
-							</td>
-						<% else %>
-		                    <td><a href="/maintenance/complete/<%= task.id%>" title="Complete task"><%= task.description %></a></td>
-		                    <td colspan="2"><a href="/maintenance/complete/<%= task.id%>" title="Complete task">
-								<% if task.is_scheduled? %>
-			                        Due on <%= task.target_at.strftime("%Y-%m-%d") %>
-								<% else %>
-			                        Due in about <%= (task.target_runtime - task.reviewed_runtime) / 60 / 60 %> runtime hours
-								<% end %>
-							</a></td>
-						<% end %>
+ 	                <tr class="<%= cycle('dark_row', 'light_row') %>" id="row<%= task.id %>">
+                   <% if task.completed_at %>
+       		            <td><%= task.description or '&nbsp;' %></td>
+       	              <td><%= task.completed_at.strftime("%Y-%m-%d") %></td>
+       							  <td><%= task.completed_by or '-' %></td>
+                   <% elsif task.pastdue_notified %>
+       		            <td><a href="/maintenance/complete/<%= task.id%>" title="Complete task"><%= task.description %></a></td>
+       							  <td colspan="2"><a href="/maintenance/complete/<%= task.id%>" title="Complete task"><b><i>
+       								<% if task.is_scheduled? %>
+       			                        Past due on <%= task.target_at.strftime("%Y-%m-%d") %>
+       								<% elsif task.is_runtime? %>
+       			                        Past due about <%= (task.reviewed_runtime - task.target_runtime) / 60 / 60 %> runtime hours ago
+       								<% elsif task.is_mileage? %>
+       			                        Past due about <%= (@device.total_mileage - task.target_mileage).round(0) %> miles ago
+       								<% end %>
+       								</i></b></a></td>
+       						<% elsif task.reminder_notified %>
+       		            <td><a href="/maintenance/complete/<%= task.id%>" title="Complete task"><%= task.description %></a></td>
+       						    <td colspan="2"><a href="/maintenance/complete/<%= task.id%>" title="Complete task"><i>
+       								<% if task.is_scheduled? %>
+       				                      Due on <%= task.target_at.strftime("%Y-%m-%d") %>
+       								<% elsif task.is_runtime? %>
+       			                        Due in about <%= (task.target_runtime - task.reviewed_runtime) / 60 / 60 %> runtime hours
+       								<% elsif task.is_mileage? %>
+       			                        Due in about <%= (task.target_mileage - @device.total_mileage).round(1) %> miles
+       			          <% end %>
+       							  </i></a></td>
+       						<% else %>
+       		            <td><a href="/maintenance/complete/<%= task.id%>" title="Complete task"><%= task.description %></a></td>
+       		            <td colspan="2"><a href="/maintenance/complete/<%= task.id%>" title="Complete task">
+       								<% if task.is_scheduled? %>
+       			                        Due on <%= task.target_at.strftime("%Y-%m-%d") %>
+       								<% elsif task.is_runtime? %>
+       			                        Due in about <%= (task.target_runtime - task.reviewed_runtime) / 60 / 60 %> runtime hours
+       								<% elsif task.is_mileage? and task.target_mileage %>
+       			                        Due in about <%= (task.target_mileage - @device.total_mileage).round(1) %> miles
+       								<% end %>
+       							  </a></td>
+       						<% end %>
 	                </tr>
                 <% end %>
             </table>

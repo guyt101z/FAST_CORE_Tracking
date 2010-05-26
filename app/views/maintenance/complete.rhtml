@@ -13,12 +13,17 @@
 	        <th>Runtime Hours</th>
 	        <td><input type="text" name="runtime_hours" value="<%= @task.target_runtime / 60 / 60 if @task.target_runtime %>" disabled/></td>
 	    </tr>
-	<% else %>
+	<% elsif @task.is_scheduled? %>
 	    <tr style="display:none;">
 	        <th>Scheduled Date</th>
 	        <td><%= @task.target_at.strftime("%Y-%m-%d") %></td>
 	    </tr>
-	<% end%>
+	<% elsif @task.is_mileage? %>
+	    <tr style="display:none;">
+	        <th>Target Mileage</th>
+	        <td><%= @task.target_mileage %></td>
+	    </tr>
+	<% end %>
 	<tr>
 		<td>&nbsp;</td>
 		<td>If the definition of this task needs to <br/>change, click <a href="/maintenance/edit/<%= @task.id %>">here</a> to change it.</td>

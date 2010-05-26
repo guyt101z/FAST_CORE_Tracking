@@ -37,3 +37,27 @@ five:
     established_at: 2008-07-01 17:00:00
     task_type: <%= MaintenanceTask::TYPE_RUNTIME %>
     target_runtime: <%= 2000 * 60 * 60 %>
+    
+six:
+    id: 6
+    device_id: 1
+    description: Mileage
+    established_at: 2009-07-01 15:10:00
+    task_type: <%= MaintenanceTask::TYPE_MILEAGE %>
+    target_mileage: 3500
+
+seven:
+    id: 7
+    device_id: 1
+    description: Mileage
+    established_at: 2009-07-01 15:10:00
+    task_type: <%= MaintenanceTask::TYPE_MILEAGE %>
+    target_mileage: 3200
+
+eight:
+    id: 8
+    device_id: 1
+    description: Mileage
+    established_at: 2009-07-01 15:10:00
+    task_type: <%= MaintenanceTask::TYPE_MILEAGE %>
+    target_mileage: 3000

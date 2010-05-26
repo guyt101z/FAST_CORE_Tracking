@@ -20,8 +20,8 @@ END;;
 
 DROP PROCEDURE IF EXISTS insert_stop_event;;
 CREATE PROCEDURE insert_stop_event(
-	_latitude FLOAT,
-	_longitude FLOAT,
+	_latitude DECIMAL(15,10),
+	_longitude DECIMAL(15,10),
 	_modem VARCHAR(22),
 	_created DATETIME,
 	_reading_id INT(11)
@@ -45,8 +45,8 @@ END;;
 
 DROP PROCEDURE IF EXISTS insert_idle_event;;
 CREATE PROCEDURE insert_idle_event(
-	_latitude FLOAT,
-	_longitude FLOAT,
+	_latitude DECIMAL(15,10),
+	_longitude DECIMAL(15,10),
 	_modem VARCHAR(22),
 	_created DATETIME,
 	_reading_id INT(11)
@@ -83,8 +83,8 @@ END;;
 
 DROP PROCEDURE IF EXISTS insert_runtime_event;;
 CREATE PROCEDURE insert_runtime_event(
-	_latitude FLOAT,
-	_longitude FLOAT,
+	_latitude DECIMAL(15,10),
+	_longitude DECIMAL(15,10),
 	_modem VARCHAR(22),
 	_created DATETIME,
 	_reading_id INT(11)
@@ -106,8 +106,8 @@ END;;
 
 DROP PROCEDURE IF EXISTS insert_engine_off_event;;
 CREATE PROCEDURE insert_engine_off_event(
-	_latitude FLOAT,
-	_longitude FLOAT,
+	_latitude DECIMAL(15,10),
+	_longitude DECIMAL(15,10),
 	_modem VARCHAR(22),
 	_created DATETIME,
 	_reading_id INT(11)
@@ -119,8 +119,8 @@ END;;
 
 DROP PROCEDURE IF EXISTS insert_reading;;
 CREATE PROCEDURE insert_reading(
-	_latitude FLOAT,
-	_longitude FLOAT,
+	_latitude DECIMAL(15,10),
+	_longitude DECIMAL(15,10),
 	_altitude  FLOAT,
 	_speed FLOAT,
 	_heading float,
@@ -138,8 +138,8 @@ END;;
 
 DROP PROCEDURE IF EXISTS insert_reading_with_io;;
 CREATE PROCEDURE insert_reading_with_io(
-	_latitude FLOAT,
-	_longitude FLOAT,
+	_latitude DECIMAL(15,10),
+	_longitude DECIMAL(15,10),
 	_altitude  FLOAT,
 	_speed FLOAT,
 	_heading float,
@@ -160,8 +160,8 @@ END;;
 
 DROP PROCEDURE IF EXISTS insert_reading_with_io_returnval;;
 CREATE PROCEDURE insert_reading_with_io_returnval(
-	_latitude FLOAT,
-	_longitude FLOAT,
+	_latitude DECIMAL(15,10),
+	_longitude DECIMAL(15,10),
 	_altitude  FLOAT,
 	_speed FLOAT,
 	_heading float,

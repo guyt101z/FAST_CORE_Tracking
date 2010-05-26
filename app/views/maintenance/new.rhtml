@@ -13,10 +13,12 @@
         <tr>
             <th>Type of Task</th>
             <td>
-            	<input type="radio" name="task_type" onclick="showHideRadioSections($('runtime_section'),$('scheduled_section'))" value="runtime"<% if @task.is_runtime? %> checked<% end%>>Runtime Hours
+            	<input type="radio" name="task_type" onclick="showHideRadioSections($('runtime_section'),$('scheduled_section'),$('mileage_section'))" value="runtime"<% if @task.is_runtime? %> checked<% end%>>Runtime Hours
 				&nbsp;&nbsp;
-            	<input type="radio" name="task_type" onclick="showHideRadioSections($('scheduled_section'),$('runtime_section'))" value="scheduled"<% if @task.is_scheduled? %> checked<% end%>>Scheduled Date
-			</td>
+            	<input type="radio" name="task_type" onclick="showHideRadioSections($('scheduled_section'),$('runtime_section'),$('mileage_section'))" value="scheduled"<% if @task.is_scheduled? %> checked<% end%>>Scheduled Date
+      	&nbsp;&nbsp;
+      				<input type="radio" name="task_type" onclick="showHideRadioSections($('mileage_section'),$('scheduled_section'),$('runtime_section'))" value="mileage"<% if @task.is_mileage? %> checked<% end%>><label for="task_mileage">Target Mileage</label>
+			      </td>
         </tr>
         <tr id="runtime_section" style="display:none;">
             <th>Runtime Hours</th>
@@ -26,20 +28,27 @@
             <th>Scheduled Date</th>
             <td><%= select_date(@task.target_at, :order=>[:month,:day,:year], :use_short_month => true, :prefix=>"target_at") %></td>
         </tr>
+        <tr id="mileage_section" style="display: none;">
+            <th>Target Mileage</th>
+            <td><input type="text" name="target_mileage" value="<%= @task.target_mileage %>" /></td>
+        </tr>
         <tr>
             <td colspan="2" align="right"><input type="submit" value="create" />&nbsp;&nbsp;<a href="javascript:history.go(-1)">cancel </a></td>
         </tr>
     </table>
 </form>
 <script>
-	function showHideRadioSections(showSection,hideSection)
+	function showHideRadioSections(showSection,hideSection,hideSection2)
 	{
 		hideSection.style.display = 'none';
+		hideSection2.style.display = 'none';
 		showSection.style.display = '';
 	}
 	<% if @task.is_scheduled? %>
-		showHideRadioSections($('scheduled_section'),$('runtime_section'));
-	<% else %>
-		showHideRadioSections($('runtime_section'),$('scheduled_section'));
+		showHideRadioSections($('scheduled_section'),$('runtime_section'),$('mileage_section'));
+	<% elsif @task.is_runtime? %>
+		showHideRadioSections($('runtime_section'),$('scheduled_section'),$('mileage_section'));
+	<% elsif @task.is_mileage? %>
+		showHideRadioSections($('mileage_section'),$('scheduled_section'),$('runtime_section'));
 	<% end %>
 </script>

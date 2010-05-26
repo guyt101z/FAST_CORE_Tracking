@@ -2,7 +2,7 @@ class TaskUtil
   def self.get_log_and_check_running(log_name,task_name,args)
     log = Logger.new(File.join(RAILS_ROOT,'log',"#{log_name}.log"), 'weekly')
 
-    suffix = args.any? ? '' : args.join(' ')
+    suffix = args.any? ? args.join(' ') : ''
     log.info "Initializing #{task_name}#{suffix}"
 
     running_instances = `ps aux`.split(/\n/).select{|x| x=~ /#{task_name}#{suffix}/}

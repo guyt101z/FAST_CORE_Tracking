@@ -18,6 +18,7 @@ class Device < ActiveRecord::Base
   validates_presence_of :name, :imei
   
   belongs_to :latest_reading, :class_name => "Reading", :foreign_key => "recent_reading_id"
+  belongs_to :latest_mileage_reading, :class_name => "Reading"
   has_one :latest_gps_reading, :class_name => "Reading", :order => "created_at DESC", :conditions => "latitude IS NOT NULL"
   has_one :latest_speed_reading, :class_name => "Reading", :order => "created_at DESC", :conditions => "speed IS NOT NULL"
   has_one :latest_data_reading, :class_name => "Reading", :order => "created_at DESC", :conditions => "ignition IS NOT NULL"
@@ -92,7 +93,7 @@ class Device < ActiveRecord::Base
     return if @gateway_device == :false
     return @gateway_device if @gateway_device
     return unless (gateway = Gateway.find(gateway_name))
-    find_statement = %(#{gateway.device_class}.find(:first,:conditions => "imei = '#{imei}'"))
+    find_statement = %(#{gateway.device_class}.find(:first,:conditions => {:imei => '#{imei}'}))
     @gateway_device = (eval(find_statement) or :false)
     return if @gateway_device == :false
     @gateway_device.logical_device = self
@@ -150,6 +151,20 @@ class Device < ActiveRecord::Base
        return true
      else
       return false
+    end
+  end
+  
+  def update_mileage
+    if self.latest_gps_reading && (self.latest_gps_reading.id > self.latest_mileage_reading_id.to_i)
+
+      last_measured_location = self.latest_mileage_reading || self.readings.find(:first, :conditions => ["latitude IS NOT NULL"], :order => 'created_at ASC')
+      self.readings.find(:all, :conditions => ["id > ? AND latitude IS NOT NULL", self.latest_mileage_reading_id.to_i], :order => "created_at ASC").each do |reading|
+        self.total_mileage += ActiveRecord::Base.connection.select_value("SELECT distance(#{last_measured_location.latitude}, #{last_measured_location.longitude}, #{reading.latitude}, #{reading.longitude})").to_f
+        last_measured_location = reading
+      end
+      self.latest_mileage_reading = last_measured_location
+      
+      self.save
     end
   end
 end

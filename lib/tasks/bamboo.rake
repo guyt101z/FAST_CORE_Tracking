@@ -1,5 +1,6 @@
 task :bamboo do
   Rake::Task["db:reset"].invoke
+  Rake::Task["db:migrate"].invoke
   Rake::Task["ci:setup:testunit"].invoke
   Rake::Task["test:test:rcov"].invoke
 

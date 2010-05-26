@@ -22,9 +22,12 @@ class MaintenanceController < ApplicationController
     return unless request.post?
     
     @task.description = params[:description]
-    @task.task_type = params[:task_type] == 'scheduled' ? MaintenanceTask::TYPE_SCHEDULED : MaintenanceTask::TYPE_RUNTIME
+    @task.task_type = MaintenanceTask::TYPE_SCHEDULED if params[:task_type] == 'scheduled'
+    @task.task_type = MaintenanceTask::TYPE_RUNTIME   if params[:task_type] == 'runtime'
+    @task.task_type = MaintenanceTask::TYPE_MILEAGE   if params[:task_type] == 'mileage'
     @task.established_at = get_date(params[:established_at]).to_time
     @task.target_runtime = params[:runtime_hours].to_f * 60 * 60
+    @task.target_mileage = params[:target_mileage]
     @task.target_at = get_date(params[:target_at]).to_time
     @task.update_status
     @task.save!
@@ -40,8 +43,11 @@ class MaintenanceController < ApplicationController
     return unless request.post?
 
     @task.description = params[:description]
-    @task.task_type = params[:task_type] == 'scheduled' ? MaintenanceTask::TYPE_SCHEDULED : MaintenanceTask::TYPE_RUNTIME
+    @task.task_type = MaintenanceTask::TYPE_SCHEDULED if params[:task_type] == 'scheduled'
+    @task.task_type = MaintenanceTask::TYPE_RUNTIME   if params[:task_type] == 'runtime'
+    @task.task_type = MaintenanceTask::TYPE_MILEAGE   if params[:task_type] == 'mileage'
     @task.target_runtime = params[:runtime_hours].to_f * 60 * 60
+    @task.target_mileage = params[:target_mileage]
     @task.target_at = get_date(params[:target_at]).to_time
     @task.remind_runtime = nil
     @task.remind_at = nil
@@ -72,7 +78,7 @@ class MaintenanceController < ApplicationController
     @task.reload
     # TODO calculate reviewed_runtime
     new_date = @task.completed_at + (@task.completed_at - @task.established_at)
-    new_task = MaintenanceTask.create!(:device_id => @task.device_id,:description => @task.description,:task_type => @task.task_type,:established_at => @task.completed_at,:target_runtime => @task.target_runtime,:target_at => new_date,:reviewed_at => Time.now)
+    new_task = MaintenanceTask.create!(:device_id => @task.device_id,:description => @task.description,:task_type => @task.task_type,:established_at => @task.completed_at,:target_runtime => @task.target_runtime,:target_mileage => @task.target_mileage,:target_at => new_date,:reviewed_at => Time.now)
 
     flash[:success] = "'#{@task.description}' for #{@task.device.name} completed successfully, and a new task has been started."
     redirect_to :action => 'edit',:id => new_task

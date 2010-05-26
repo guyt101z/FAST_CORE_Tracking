@@ -6,6 +6,7 @@ class MaintenanceTask < ActiveRecord::Base
   
   TYPE_RUNTIME = 0
   TYPE_SCHEDULED = 1
+  TYPE_MILEAGE = 2
   
   def is_runtime?
     task_type == TYPE_RUNTIME
@@ -15,6 +16,10 @@ class MaintenanceTask < ActiveRecord::Base
     task_type == TYPE_SCHEDULED
   end
   
+  def is_mileage?
+    task_type == TYPE_MILEAGE
+  end
+  
   def update_status(update_time = Time.now)
     return if completed_at
 
@@ -22,7 +27,7 @@ class MaintenanceTask < ActiveRecord::Base
     case task_type
       when TYPE_RUNTIME
         self.remind_runtime = self.target_runtime * 0.90 unless self.remind_runtime # set to 90% if uninitialized
-        update_reviewed_runtime
+        update_reviewed_runtime!
         if self.reviewed_runtime > self.target_runtime
           unless self.pastdue_notified
             self.pastdue_notified = self.reviewed_at
@@ -32,6 +37,20 @@ class MaintenanceTask < ActiveRecord::Base
           unless self.reminder_notified
             self.reminder_notified = self.reviewed_at
             return "Reminder: Maintenance task '#{self.description}' will be due in about #{(self.target_runtime - self.reviewed_runtime) / 60 / 60} more runtime hours"
+          end
+        end
+      when TYPE_MILEAGE
+        update_mileage
+        remaining_miles = self.target_mileage - device.total_mileage
+        if remaining_miles < 0
+          unless self.pastdue_notified
+            self.pastdue_notified = self.reviewed_at
+            return "Past Due: Maintenance task '#{self.description}' was due #{-1 * remaining_miles.round(1)} miles ago"
+          end
+        elsif remaining_miles < 350
+          unless self.reminder_notified
+            self.reminder_notified = self.reviewed_at
+            return "Reminder: Maintenance task '#{self.description}' will be due in #{remaining_miles.round(1)} miles"
           end
         end
       when TYPE_SCHEDULED
@@ -62,8 +81,12 @@ class MaintenanceTask < ActiveRecord::Base
     nil
   end
   
+  def update_mileage
+    self.device.update_mileage
+  end
+
 private
-  def update_reviewed_runtime
+  def update_reviewed_runtime!
     established_date_string = self.established_at.strftime('%Y-%m-%d %H:%M:%S')
     reviewed_date_string = self.reviewed_at.strftime('%Y-%m-%d %H:%M:%S')
 

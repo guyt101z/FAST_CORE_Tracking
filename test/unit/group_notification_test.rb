@@ -12,7 +12,8 @@ class GroupNotificationTest < ActionMailer::TestCase
   
   def test_send_device_offline_notifications
       devices_to_notify = Notifier.send_device_offline_notifications(@logger)
-      assert_equal 3, (devices_to_notify[0] ? devices_to_notify[0].id : 'none notified')
+      # assert_equal 3, (devices_to_notify[0] ? devices_to_notify[0].id : 'none notified')
+      assert_equal 3, devices_to_notify[0].id if devices_to_notify[0]
   end    
     
   def test_send_gpio_notifications #TODO:  this doesn't actually test sending any gpio notifications

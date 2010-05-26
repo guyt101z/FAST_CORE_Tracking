@@ -76,6 +76,7 @@ class ReportsController < ApplicationController
   # TODO consider how to use the word "task" instead of "reading" for these elements
   def maintenance
     @device = Device.find(params[:id])
+    @device.update_mileage
     @device_names = Device.get_names(session[:account_id])
     conditions = ["device_id = ?",params[:id]]
     @readings = MaintenanceTask.paginate(:per_page => ResultCount,:page => params[:page],:conditions => conditions,

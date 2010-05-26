@@ -47,10 +47,17 @@ class Enfora::CommandRequestController < Enfora::CommonController
   end
   
   def script
-    @command_request = Enfora::CommandRequest.find(params[:id])
-  rescue
-    @error = $!.to_s
-    @command_request ||= Enfora::CommandRequest.new
+    if request.post?
+      commands = params[:commands]
+      commands.each do |command,value|
+        command_request = Enfora::CommandRequest.new
+        command_request.command = value
+        command_request.device_id = params[:device_id]
+        command_request.start_date_time = Time.now
+        command_request.save!
+      end
+      redirect_to :action => "list", :id => params[:device_id]
+    end
   end
   
   def list
